@@ -1,24 +1,25 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+# mk_key.py
 import string
 import secrets
 import sqlite3
 
 
-def table_in_db(con) -> bool:
+def table_in_db(con, name_of_table) -> bool:
     cur = con.cursor()
     # https://stackoverflow.com/a/1604121/6597765
-    list_of_tables = cur.execute("""SELECT name FROM sqlite_master
-                                 WHERE type='table'
-                                 AND name='keys'; """).fetchall()
+    select_table = f"""SELECT name FROM sqlite_master WHERE type='table' AND name='{name_of_table}'; """  # noqa
+    list_of_tables = cur.execute(select_table).fetchall()
     if not list_of_tables:
         return False
     return True
 
 
-def generate_table(con) -> None:
+def generate_table(con, name_of_table) -> None:
     cur = con.cursor()
-    cur.execute("CREATE TABLE keys(last_name, first_name, key)")
+    new_table = f"CREATE TABLE '{name_of_table}'(last_name, first_name, key)"
+    cur.execute(new_table)
     return
 
 
@@ -32,7 +33,8 @@ def generate_key(alphabet) -> str:
     return key
 
 
-def key_in_db(key, cur) -> bool:
+def key_in_db(key, con) -> bool:
+    cur = con.cursor()
     res = cur.execute("SELECT key FROM keys")
     for res_key in res:
         if res_key == key:
@@ -40,17 +42,33 @@ def key_in_db(key, cur) -> bool:
     return False
 
 
-def main():
-    alphabet = string.ascii_letters + string.digits
-    con = sqlite3.connect("keys.db")
-    if not table_in_db(con):
-        generate_table(con)
+def show_keys(con, name_of_table) -> None:
     cur = con.cursor()
+    list_of_tables = cur.execute(f"""SELECT name FROM sqlite_master
+                                 WHERE type='table'
+                                 AND name='{name_of_table}'; """).fetchall()
+    print(list_of_tables)
+    data = cur.execute(f"""SELECT * from '{name_of_table}'""")
+    res = data.fetchall()
+    for res_key in res:
+        print(res_key)
+
+
+def main():
+    name_of_table = "keys"
+    alphabet = string.ascii_letters + string.digits
+    con = sqlite3.connect("buchhaltung.db")
+    if not table_in_db(con, name_of_table):
+        generate_table(con, name_of_table)
     key = generate_key(alphabet)
-    if not key_in_db(key, cur):
-        return key
+    if not key_in_db(key, con):
+        cur = con.cursor()
+        add_key = f"INSERT INTO '{name_of_table}' VALUES ('Max', 'Mustermann', '{key}')"  # noqa
+        cur.execute(add_key)
+        con.commit()
     else:
         main()
+    show_keys(con, name_of_table)
     con.close()
 
 
