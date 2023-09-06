@@ -1,7 +1,10 @@
 include *.db
 include *.lock
 include *.py
+include *.txt
 include Pipfile
-recursive-include dist *.gz
-recursive-include dist *.whl
 
+recursive-include dist *.db
+recursive-include dist *.gz
+recursive-include dist *.py
+recursive-include dist *.whl

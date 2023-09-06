@@ -8,6 +8,7 @@ gender-guesser = "*"
 prettytable = "*"
 build = "*"
 check-manifest = "*"
+hatch = "*"
 
 [dev-packages]
 
