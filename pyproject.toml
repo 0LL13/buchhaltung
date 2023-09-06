@@ -1,3 +1,19 @@
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
+
+[project]
+name = "buchhaltung"
+version = "0.0.6"
+authors = [
+  { name="Oliver Stapel", email="hardy.ecc95@gmail.com" },
+]
+description = "Text-based accounting app."
+readme = "README.rst"
+requires-python = ">=3.10"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Linux",
+]
+
