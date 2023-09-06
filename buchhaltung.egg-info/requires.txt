@@ -1,0 +1,9 @@
+gender-guesser
+prettytable
+wcwidth
+
+[dev]
+check-manifest
+
+[test]
+pytest-cov

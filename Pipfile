@@ -6,6 +6,8 @@ name = "pypi"
 [packages]
 gender-guesser = "*"
 prettytable = "*"
+build = "*"
+check-manifest = "*"
 
 [dev-packages]
 
