@@ -2,4 +2,3 @@ include *.db
 include *.lock
 include *.py
 include Pipfile
-recursive-include resources *.pyc

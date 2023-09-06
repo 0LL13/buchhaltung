@@ -18,7 +18,3 @@ resources/__init__.py
 resources/attr_dicts.py
 resources/constants.py
 resources/helpers.py
-resources/__pycache__/__init__.cpython-38.pyc
-resources/__pycache__/constants.cpython-38.pyc
-resources/__pycache__/helpers.cpython-38.pyc
-resources/__pycache__/mop_tinyDB.cpython-38.pyc
