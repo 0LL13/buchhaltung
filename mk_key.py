@@ -44,17 +44,21 @@ def key_in_db(key, con) -> bool:
 
 def show_keys(con, name_of_table) -> None:
     cur = con.cursor()
-    list_of_tables = cur.execute(f"""SELECT name FROM sqlite_master
-                                 WHERE type='table'
-                                 AND name='{name_of_table}'; """).fetchall()
-    print(list_of_tables)
     data = cur.execute(f"""SELECT * from '{name_of_table}'""")
     res = data.fetchall()
     for res_key in res:
         print(res_key)
 
 
+def connect_entry_with_key(con, name_of_table, person) -> None:
+    cur = con.cursor()
+    add_key = f"INSERT INTO '{name_of_table}' VALUES ('Max', 'Mustermann', '{key}')"  # noqa
+    cur.execute(add_key)
+    con.commit()
+
+
 def main():
+    person = "employee"
     name_of_table = "keys"
     alphabet = string.ascii_letters + string.digits
     con = sqlite3.connect("buchhaltung.db")
@@ -62,10 +66,7 @@ def main():
         generate_table(con, name_of_table)
     key = generate_key(alphabet)
     if not key_in_db(key, con):
-        cur = con.cursor()
-        add_key = f"INSERT INTO '{name_of_table}' VALUES ('Max', 'Mustermann', '{key}')"  # noqa
-        cur.execute(add_key)
-        con.commit()
+        connect_entry_with_key(con, person)
     else:
         main()
     show_keys(con, name_of_table)
