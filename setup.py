@@ -49,11 +49,11 @@ setup(
     test_suite="tests",
     tests_require=test_requirements,
     url="https://github.com/0LL13/buchhaltung",
-    version="0.0.11",
+    version="0.0.12",
     zip_safe=False,
     extras_require={
         "dev": ["check-manifest"],
-        "test": ["pytest-cov"],
+        "test": ["coverage"],
     },
     project_urls={
         "Bug Reports": "https://github.com/0LL13/buchhaltung/issues",

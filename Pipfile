@@ -10,6 +10,7 @@ build = "*"
 check-manifest = "*"
 hatch = "*"
 pytest = "*"
+coverage = "*"
 
 [dev-packages]
 
