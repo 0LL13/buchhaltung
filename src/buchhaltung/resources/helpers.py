@@ -1,7 +1,23 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """Helper functions: exceptions, print style, ..."""
+import os
+import sys
+
 from prettytable import PrettyTable
+
+PACKAGE_PARENT = ".."
+SCRIPT_DIR = os.path.dirname(
+    os.path.realpath(os.path.join(os.getcwd(), os.path.expanduser(__file__)))
+)  # isort:skip # noqa # pylint: disable=wrong-import-position
+sys.path.append(
+    os.path.normpath(os.path.join(SCRIPT_DIR, PACKAGE_PARENT))
+)  # isort: skip # noqa # pylint: disable=wrong-import-position
+
+from buchhaltung.resources.attr_dicts import german_attrs  # type: ignore # isort:skip # noqa
+
+
+language = "german"
 
 
 class TooManyFirstNames(Exception):
@@ -12,8 +28,8 @@ class TooManyFirstNames(Exception):
 
     def __init__(self, message):
         """Usage: raise TooManyFirstNames ("message")."""
-        Exception.__init__(self)
-        print(message)
+
+        Exception.__init__(self, message)
 
 
 class AttrDisplay:
@@ -37,6 +53,7 @@ class AttrDisplay:
                 None,
             ]:
                 attrs[key] = getattr(self, key)
+
         return attrs
 
     def __str__(self) -> str:
@@ -52,7 +69,10 @@ class AttrDisplay:
 
         see also: https://zetcode.com/python/prettytable/
         """
-        attrs = self.translate("german")
+        if language:
+            attrs = self.translate()
+        else:
+            attrs = self.gather_attrs()
         print()
         print(f"{self.__class__.__name__}")
         t = PrettyTable(["attribute", "value"])
@@ -63,17 +83,15 @@ class AttrDisplay:
 
         return str(t)
 
-    def translate(self, language) -> dict:
+    def translate(self) -> dict:
         """
         Select dict with attribute names of another language.
         """
-        from resources.attr_dicts import german_attrs
+        attrs = self.gather_attrs()
+        new_attrs = {}
+        for k, v in attrs.items():
+            if k in german_attrs:
+                german_key = german_attrs[k]
+                new_attrs[german_key] = attrs[k]
 
-        if language == "german":
-            attrs = self.gather_attrs()
-            new_attrs = {}
-            for k, v in attrs.items():
-                if k in german_attrs:
-                    german_key = german_attrs[k]
-                    new_attrs[german_key] = attrs[k]
-            return new_attrs
+        return new_attrs

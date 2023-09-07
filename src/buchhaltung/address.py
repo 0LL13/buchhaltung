@@ -6,13 +6,6 @@ import sys
 from dataclasses import dataclass, field
 from typing import Optional
 
-PACKAGE_PARENT = ".."
-SCRIPT_DIR = os.path.dirname(
-    os.path.realpath(os.path.join(os.getcwd(), os.path.expanduser(__file__)))
-)  # isort:skip # noqa # pylint: disable=wrong-import-position
-sys.path.append(
-    os.path.normpath(os.path.join(SCRIPT_DIR, PACKAGE_PARENT))
-)  # isort: skip # noqa # pylint: disable=wrong-import-position
 
 from resources.constants import (  # type: ignore # noqa
     PEER_PREPOSITIONS,

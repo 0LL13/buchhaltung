@@ -1,9 +1,27 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # mk_key.py
+import os
+import sys
 import string
 import secrets
 import sqlite3
+
+
+PACKAGE_PARENT = ".."
+SCRIPT_DIR = os.path.dirname(
+    os.path.realpath(os.path.join(os.getcwd(), os.path.expanduser(__file__)))
+)  # isort:skip # noqa # pylint: disable=wrong-import-position
+sys.path.append(
+    os.path.normpath(os.path.join(SCRIPT_DIR, PACKAGE_PARENT))
+)  # isort: skip # noqa # pylint: disable=wrong-import-position
+
+from resources.constants import (  # type: ignore # noqa
+    PEER_PREPOSITIONS,
+    PEERTITLES,
+)
+from resources.helpers import AttrDisplay  # type: ignore # noqa
+from resources.helpers import TooManyFirstNames  # noqa
 
 
 def table_in_db(con, name_of_table) -> bool:
@@ -50,7 +68,7 @@ def show_keys(con, name_of_table) -> None:
         print(res_key)
 
 
-def connect_entry_with_key(con, name_of_table, person) -> None:
+def connect_entry_with_key(con, name_of_table, person, key) -> None:
     cur = con.cursor()
     add_key = f"INSERT INTO '{name_of_table}' VALUES ('Max', 'Mustermann', '{key}')"  # noqa
     cur.execute(add_key)
@@ -66,7 +84,7 @@ def main():
         generate_table(con, name_of_table)
     key = generate_key(alphabet)
     if not key_in_db(key, con):
-        connect_entry_with_key(con, person)
+        connect_entry_with_key(con, name_of_table, person, key)
     else:
         main()
     show_keys(con, name_of_table)

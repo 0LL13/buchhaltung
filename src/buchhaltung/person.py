@@ -6,7 +6,6 @@ import os
 import sys
 from dataclasses import dataclass, field
 from typing import Optional, Tuple
-
 from gender_guesser import detector as sex  # type: ignore
 
 PACKAGE_PARENT = ".."
@@ -17,12 +16,15 @@ sys.path.append(
     os.path.normpath(os.path.join(SCRIPT_DIR, PACKAGE_PARENT))
 )  # isort: skip # noqa # pylint: disable=wrong-import-position
 
-from resources.constants import (  # type: ignore # noqa
-    PEER_PREPOSITIONS,
-    PEERTITLES,
-)
-from resources.helpers import AttrDisplay  # type: ignore # noqa
-from resources.helpers import TooManyFirstNames  # noqa
+try:
+    from buchhaltung.resources.helpers import AttrDisplay  # type: ignore # isort:skip # noqa
+except ModuleNotFoundError:
+    print(os.path)
+    print(sys.path)
+    print()
+from buchhaltung.resources.helpers import TooManyFirstNames # type: ignore # isort:skip # noqa
+from buchhaltung.resources.constants import PEER_PREPOSITIONS # type: ignore # isort:skip # noqa
+from buchhaltung.resources.constants import PEERTITLES # type: ignore # isort:skip # noqa
 
 
 @dataclass
@@ -56,7 +58,10 @@ class Name(_Name_default, _Name_base, AttrDisplay):
         """
         first_names = self.first_name.split(" ")
         self.first_name = first_names[0]
-        if len(first_names) > 1:
+        if len(first_names) >= 4:
+            message = "Only two middle names can be handled, sorry!"
+            raise TooManyFirstNames(message)
+        elif len(first_names) >= 1 and not self.middle_names:
             self.middle_names = " ".join(name for name in first_names[1:])
 
 
@@ -199,10 +204,17 @@ class Person(
         self.deceased = True
 
 
+@dataclass
+class TestClass(AttrDisplay):
+    a: str
+    b: str
+    c: str
+
+
 if __name__ == "__main__":
 
-    name = Name("Hans Hermann", "Werner")
-    print('name = Name("Hans Hermann", "Werner")')
+    name = Name("Hans-Peter Hermann Klaus", "Werner")
+    print('name = Name("Hans-Peter Hermann Klaus", "Werner")')
     print(name)
 
     name = Name("Bodo Knuth H.", "Weibel", salutation="Herr", nickname="Knuti")
@@ -248,3 +260,16 @@ if __name__ == "__main__":
     print(
         'person_5 = Person("Rainer-Maria", "Brandauer", academic_title="Prof.", peer_title="Fürst von")')  # noqa
     print(person_5)
+
+    person_6 = Person("Horatio", "Pimpernell", academic_title="Prof. Dr.   Dr.", # noqa
+                      middle_names="R.")  # noqa
+    print(
+        'person_6 = Person("Horatio", "Pimpernell", academic_title="Prof. Dr.   Dr.", middle_names="R.",'  # noqa
+    )
+    print(person_6)
+
+    test = TestClass("späm", "ham", "ew")
+    print(
+        'test = TestClass("späm", "ham", "ew")'
+    )
+    print(test)

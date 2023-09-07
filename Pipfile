@@ -9,6 +9,7 @@ prettytable = "*"
 build = "*"
 check-manifest = "*"
 hatch = "*"
+pytest = "*"
 
 [dev-packages]
 
