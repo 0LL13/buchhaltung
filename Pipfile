@@ -13,6 +13,7 @@ pytest = "*"
 coverage = "*"
 tox = "*"
 pytest-sugar = "*"
+twine = "*"
 
 [dev-packages]
 

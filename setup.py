@@ -6,7 +6,7 @@
 from setuptools import find_packages, setup  # type: ignore
 
 with open("README.rst") as readme_file:
-    long_description = readme_file.read()
+    extended_description = readme_file.read()
 
 requirements = [
     "gender-guesser",
@@ -39,7 +39,7 @@ setup(
     description="A text-based application to reproduce business transactions.",  # noqa
     install_requires=requirements,
     license="MIT license",
-    long_description=long_description,
+    long_description=extended_description,
     long_description_content_type="text/x-rst",
     include_package_data=True,
     keywords="accounting, erp",
@@ -49,7 +49,7 @@ setup(
     test_suite="tests",
     tests_require=test_requirements,
     url="https://github.com/0LL13/buchhaltung",
-    version="0.0.13",
+    version="0.0.14",
     zip_safe=False,
     extras_require={
         "dev": ["check-manifest"],
