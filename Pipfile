@@ -11,6 +11,8 @@ check-manifest = "*"
 hatch = "*"
 pytest = "*"
 coverage = "*"
+tox = "*"
+pytest-sugar = "*"
 
 [dev-packages]
 

@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "9061cdd94ae86d71506d163356681666ec9786dd6fbcd489199ac27960dea3f8"
+            "sha256": "9f659d4e8ad24f99642c174b2081678bf439dae411549a4ed818ed382c84ccf5"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -31,6 +31,14 @@
             ],
             "index": "pypi",
             "version": "==1.0.3"
+        },
+        "cachetools": {
+            "hashes": [
+                "sha256:95ef631eeaea14ba2e36f06437f36463aac3a096799e876ee55e5cdccb102590",
+                "sha256:dce83f2d9b4e1f732a8cd44af8e8fab2dbe46201467fc98b3ef8f269092bf62b"
+            ],
+            "markers": "python_version >= '3.7'",
+            "version": "==5.3.1"
         },
         "certifi": {
             "hashes": [
@@ -109,6 +117,14 @@
             ],
             "version": "==1.15.1"
         },
+        "chardet": {
+            "hashes": [
+                "sha256:1b3b6ff479a8c414bc3fa2c0852995695c4a026dcd6d0633b2dd092ca39c1cf7",
+                "sha256:e1cf59446890a00105fe7b7912492ea04b6e6f06d4b742b2c788469e34c82970"
+            ],
+            "markers": "python_version >= '3.7'",
+            "version": "==5.2.0"
+        },
         "check-manifest": {
             "hashes": [
                 "sha256:058cd30057714c39b96ce4d83f254fc770e3145c7b1932b5940b4e3efb5521ef",
@@ -124,6 +140,14 @@
             ],
             "markers": "python_version >= '3.7'",
             "version": "==8.1.7"
+        },
+        "colorama": {
+            "hashes": [
+                "sha256:08695f5cb7ed6e0531a20572697297273c47b8cae5a63ffc6d6ed5c201be6e44",
+                "sha256:4f1d9991f5acc0ca119f9d443620b77f9d6b33703e51011c16baf57afb285fc6"
+            ],
+            "markers": "python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2, 3.3, 3.4, 3.5, 3.6'",
+            "version": "==0.4.6"
         },
         "coverage": {
             "hashes": [
@@ -445,6 +469,14 @@
             ],
             "version": "==1.8.2"
         },
+        "pyproject-api": {
+            "hashes": [
+                "sha256:1817dc018adc0d1ff9ca1ed8c60e1623d5aaca40814b953af14a9cf9a5cae538",
+                "sha256:4c0116d60476b0786c88692cf4e325a9814965e2469c5998b830bba16b183675"
+            ],
+            "markers": "python_version >= '3.8'",
+            "version": "==1.6.1"
+        },
         "pyproject-hooks": {
             "hashes": [
                 "sha256:283c11acd6b928d2f6a7c73fa0d01cb2bdc5f07c57a2eeb6e83d5e56b97976f8",
@@ -460,6 +492,14 @@
             ],
             "index": "pypi",
             "version": "==7.4.1"
+        },
+        "pytest-sugar": {
+            "hashes": [
+                "sha256:8cb5a4e5f8bbcd834622b0235db9e50432f4cbd71fef55b467fe44e43701e062",
+                "sha256:f1e74c1abfa55f7241cf7088032b6e378566f16b938f3f08905e2cf4494edd46"
+            ],
+            "index": "pypi",
+            "version": "==0.9.7"
         },
         "rich": {
             "hashes": [
@@ -501,6 +541,14 @@
             "markers": "python_version >= '3.7'",
             "version": "==1.3.0"
         },
+        "termcolor": {
+            "hashes": [
+                "sha256:3afb05607b89aed0ffe25202399ee0867ad4d3cb4180d98aaf8eefa6a5f7d475",
+                "sha256:b5b08f68937f138fe92f6c089b99f1e2da0ae56c52b78bf7075fd95420fd9a5a"
+            ],
+            "markers": "python_version >= '3.7'",
+            "version": "==2.3.0"
+        },
         "tomli": {
             "hashes": [
                 "sha256:939de3e7a6161af0c887ef91b7d41a53e7c5a1ca976325f429cb46ea9bc30ecc",
@@ -524,6 +572,14 @@
             ],
             "markers": "python_version >= '3.7'",
             "version": "==0.12.1"
+        },
+        "tox": {
+            "hashes": [
+                "sha256:8a8cc94b7269f8e43dfc636eff2da4b33a199a4e575b5b086cc51aae24ac4262",
+                "sha256:da761b4a57ee2b92b5ce39f48ff723fc42d185bf2af508effb683214efa662ea"
+            ],
+            "index": "pypi",
+            "version": "==4.11.1"
         },
         "trove-classifiers": {
             "hashes": [
