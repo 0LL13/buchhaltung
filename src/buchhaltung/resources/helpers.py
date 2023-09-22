@@ -73,7 +73,6 @@ class AttrDisplay:
             attrs = self.translate()
         else:
             attrs = self.gather_attrs()
-        print()
         print(f"{self.__class__.__name__}")
         t = PrettyTable(["attribute", "value"])
         t.align["attribute"] = "l"

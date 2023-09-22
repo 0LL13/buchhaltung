@@ -8,7 +8,7 @@ german_attrs = {
     "age": "Alter",
     "alternative_address": "Alternative Adresse",
     "appartment_number": "Wohnungsnummer",
-    "company": "Unternehmen",
+    "company_name": "Unternehmen",
     "date_of_birth": "Geburtsdatum",
     "date_of_death": "Todesdatum",
     "deceased": "gestorben",

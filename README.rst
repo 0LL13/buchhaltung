@@ -72,3 +72,6 @@ Comments
     https://www.investopedia.com/terms/a/accounting-event.asp
     https://towardsdatascience.com/help-your-finance-team-to-automate-accounting-tasks-using-python-68bcefe7524c
     https://studyflix.de/wirtschaft/buchung-2321
+
+    How to keep entries small and open for queries:
+    https://stackoverflow.com/q/43994307/6597765

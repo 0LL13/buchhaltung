@@ -2,57 +2,42 @@
 # -*- coding: utf-8 -*-
 # mk_key.py
 import os
-import sys
 import string
 import secrets
 import sqlite3
 
 
-PACKAGE_PARENT = ".."
-SCRIPT_DIR = os.path.dirname(
-    os.path.realpath(os.path.join(os.getcwd(), os.path.expanduser(__file__)))
-)  # isort:skip # noqa # pylint: disable=wrong-import-position
-sys.path.append(
-    os.path.normpath(os.path.join(SCRIPT_DIR, PACKAGE_PARENT))
-)  # isort: skip # noqa # pylint: disable=wrong-import-position
-
-from resources.constants import (  # type: ignore # noqa
-    PEER_PREPOSITIONS,
-    PEERTITLES,
-)
-from resources.helpers import AttrDisplay  # type: ignore # noqa
-from resources.helpers import TooManyFirstNames  # noqa
-
-
-def table_in_db(con, name_of_table) -> bool:
-    cur = con.cursor()
-    # https://stackoverflow.com/a/1604121/6597765
-    select_table = f"""SELECT name FROM sqlite_master WHERE type='table' AND name='{name_of_table}'; """  # noqa
-    list_of_tables = cur.execute(select_table).fetchall()
-    if not list_of_tables:
-        return False
-    return True
-
-
-def generate_table(con, name_of_table) -> None:
-    cur = con.cursor()
-    new_table = f"CREATE TABLE '{name_of_table}'(last_name, first_name, key)"
+def generate_table(conn, name_of_table) -> None:
+    cur = conn.cursor()
+    new_table = f"CREATE TABLE IF NOT EXISTS '{name_of_table}'(key TEXT)"
     cur.execute(new_table)
+    conn.commit()
     return
 
 
 def generate_key(alphabet) -> str:
+    database_path = os.path.join(os.path.dirname(__file__), "buchhaltung.db")
+    conn = sqlite3.connect(database_path)
+    generate_table(conn, "keys")
+
     while True:
         key = ''.join(secrets.choice(alphabet) for i in range(8))
         if (any(c.islower() for c in key)
                 and any(c.isupper() for c in key)
                 and sum(c.isdigit() for c in key) >= 1):
             break
+
+    if not key_in_db(conn, key):
+        cur = conn.cursor()
+        add_key = f"""INSERT INTO 'keys' VALUES ('{key}')"""
+        cur.execute(add_key)
+        conn.commit()
+
     return key
 
 
-def key_in_db(key, con) -> bool:
-    cur = con.cursor()
+def key_in_db(conn, key) -> bool:
+    cur = conn.cursor()
     res = cur.execute("SELECT key FROM keys")
     for res_key in res:
         if res_key == key:
@@ -60,36 +45,26 @@ def key_in_db(key, con) -> bool:
     return False
 
 
-def show_keys(con, name_of_table) -> None:
-    cur = con.cursor()
-    data = cur.execute(f"""SELECT * from '{name_of_table}'""")
+def show_keys(conn) -> None:
+    cur = conn.cursor()
+    data = cur.execute("""SELECT key from keys""")
     res = data.fetchall()
     for res_key in res:
         print(res_key)
 
 
-def connect_entry_with_key(con, name_of_table, person, key) -> None:
-    cur = con.cursor()
-    add_key = f"INSERT INTO '{name_of_table}' VALUES ('Max', 'Mustermann', '{key}')"  # noqa
-    cur.execute(add_key)
-    con.commit()
-
-
-def main():
-    person = "employee"
+def mk_key():
     name_of_table = "keys"
     alphabet = string.ascii_letters + string.digits
-    con = sqlite3.connect("buchhaltung.db")
-    if not table_in_db(con, name_of_table):
-        generate_table(con, name_of_table)
+    database_path = os.path.join(os.path.dirname(__file__), "buchhaltung.db")
+    conn = sqlite3.connect(database_path)
+    generate_table(conn, name_of_table)
     key = generate_key(alphabet)
-    if not key_in_db(key, con):
-        connect_entry_with_key(con, name_of_table, person, key)
-    else:
-        main()
-    show_keys(con, name_of_table)
-    con.close()
+    if 0:
+        show_keys(conn)
+    conn.close()
+    return key
 
 
 if __name__ == "__main__":
-    main()
+    mk_key()
