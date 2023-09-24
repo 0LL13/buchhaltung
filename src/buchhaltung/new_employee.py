@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # new_employee.py
+import datetime
+import getpass
 import hashlib
 import os
 import sqlite3
@@ -13,16 +15,18 @@ def generate_table(conn, name_of_table) -> None:
                     employee_id INTEGER PRIMARY KEY,
                     key TEXT,
                     employee TEXT NOT NULL,
-                    initial TEXT,
+                    initial_new_employee TEXT,
                     salt BLOB NOT NULL,
-                    password_hash BLOB NOT NULL
+                    password_hash BLOB NOT NULL,
+                    created_by TEXT,
+                    timestamp TEXT
                     )"""
     cur.execute(new_table)
     conn.commit()
     return
 
 
-def new_employee() -> None:
+def new_employee(initial_creator=None) -> None:
     database_path = os.path.join(os.path.dirname(__file__), "buchhaltung.db")
     conn = sqlite3.connect(database_path)
     generate_table(conn, "employees")
@@ -32,17 +36,28 @@ def new_employee() -> None:
     if not employee_in_table(conn, new_employee):
         cur = conn.cursor()
         new_key = mk_key()
-        initial = mk_initial(conn, new_employee, 2)
         password = "asdfgh"
         salt, password_hash = hash_password(password)
+        if initial_creator is None:
+            created_by = getpass.getuser()
+        else:
+            created_by = initial_creator
+        timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
+        print(timestamp)
+        initial_new_employee = mk_initial(conn, new_employee, 2)
+
         add_employee = """INSERT INTO employees (
-                           key, employee, initial, salt, password_hash)
-                           VALUES (?, ?, ?, ?, ?)"""
-        cur.execute(add_employee, (new_key, new_employee, initial,
-                    sqlite3.Binary(salt), sqlite3.Binary(password_hash)))
+                          key, employee, initial_new_employee,
+                          salt, password_hash,
+                          created_by, timestamp)
+                          VALUES (?, ?, ?, ?, ?, ?, ?)"""
+        cur.execute(add_employee, (new_key, new_employee, initial_new_employee,
+                                   sqlite3.Binary(salt),
+                                   sqlite3.Binary(password_hash),
+                                   created_by, timestamp))
         conn.commit()
     else:
-        print("Employee already exists.")
+        print("There already is an entry with the same name.")
 
     if 1:
         show_employees(conn)
@@ -59,8 +74,6 @@ def hash_password(password):
 def mk_initial(conn, name, length) -> str:
     fn = name.split()[0]
     ln = name.split()[1]
-
-    print("length: ", length)
 
     if length == 2:
         initial = ''.join(fn[0].lower() + ln[0].lower())
@@ -81,7 +94,7 @@ def mk_initial(conn, name, length) -> str:
 
 def initial_in_table(conn, initial) -> bool:
     cur = conn.cursor()
-    res = cur.execute("SELECT initial FROM employees")
+    res = cur.execute("SELECT initial_new_employee FROM employees")
     initials = res.fetchall()
     for res_initial in initials:
         abbr = ''.join(str(c) for c in res_initial)
