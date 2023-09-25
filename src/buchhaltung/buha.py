@@ -1,21 +1,17 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# new_entry.py
+# buha.py
 import os
 import sys
 import sqlite3
 from login import LoginMenu
 from new_employee import new_employee
-
+from new_entry import MenuNewEntry
 
 """
-New entry: customer, employee, supplier, entity, object (ware/product/tool/machine/material), bank details  # noqa
-customer: first_name, last_name, company_name, customer_nr, currency, key
-employee: first_name, last_name, job_title, division, account_nr, key
-supplier: company_name, account_nr, currency, key
-entity: company_name, street, street_nr, zip_code, city, country, key
-object: name, type (ware, product, material, ...), supplier, supplier_alternatives, key
-bank_details: name_of_bank, IBAN, BLZ, BIC, account_nr, key
+Entry menu when calling buha. If there is no employee registered, a first
+employee will be registered. After that employees log in and choose what they
+need to do.
 """
 
 
@@ -68,11 +64,10 @@ class Menu():
             else:
                 print(f"{choice} is not a valid choice.")
 
-    def quit(self) -> None:
-        sys.exit()
-
     def new_entry(self, initial) -> None:
         print(f"new entry by {initial}")
+        menu = MenuNewEntry()
+        menu.run(initial)
 
     def change_entry(self, initial) -> None:
         print(f"change entry by {initial}")
