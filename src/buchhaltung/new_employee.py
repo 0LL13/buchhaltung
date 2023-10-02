@@ -9,29 +9,40 @@ import sqlite3
 from mk_key import mk_key
 
 
-def generate_table(conn, name_of_table) -> None:
+name_new_employee = {
+    "fr": "Entrez le nom de l'employé (prénom, nom): ",
+    "en": "Enter name of employee (first name, last name): ",
+    "de": "Name der/s Mitarbeiterin/s (Vorname, Name): ",
+    "es": "Primer empleado creado. Por favor Iniciar sesión.",
+    "it": "Primo dipendente creato. Accedere prego.",
+    "tr": "İlk çalışan oluşturuldu. Lütfen giriş yapın.",
+}
+
+
+def generate_table_employees(conn) -> None:
     cur = conn.cursor()
-    new_table = f"""CREATE TABLE IF NOT EXISTS '{name_of_table}'(
-                    employee_id INTEGER PRIMARY KEY,
-                    key TEXT,
-                    employee TEXT NOT NULL,
-                    initial_new_employee TEXT,
-                    salt BLOB NOT NULL,
-                    password_hash BLOB NOT NULL,
-                    created_by TEXT,
-                    timestamp TEXT
-                    )"""
-    cur.execute(new_table)
+    table_employees = """CREATE TABLE IF NOT EXISTS employees (
+                         employee_id INTEGER PRIMARY KEY,
+                         key TEXT,
+                         employee TEXT NOT NULL,
+                         initial_new_employee TEXT,
+                         language TEXT,
+                         salt BLOB NOT NULL,
+                         password_hash BLOB NOT NULL,
+                         created_by TEXT,
+                         timestamp TEXT
+                         )"""
+    cur.execute(table_employees)
     conn.commit()
     return
 
 
-def new_employee(initial_creator=None) -> None:
+def new_employee(language, initial_creator=None) -> None:
     database_path = os.path.join(os.path.dirname(__file__), "buchhaltung.db")
     conn = sqlite3.connect(database_path)
-    generate_table(conn, "employees")
+    generate_table_employees(conn)
 
-    new_employee = input("Enter name of employee (first name, last name): ")
+    new_employee = input(name_new_employee[language])
 
     if not employee_in_table(conn, new_employee):
         cur = conn.cursor()
@@ -47,11 +58,12 @@ def new_employee(initial_creator=None) -> None:
         initial_new_employee = mk_initial(conn, new_employee, 2)
 
         add_employee = """INSERT INTO employees (
-                          key, employee, initial_new_employee,
+                          key, employee, initial_new_employee, language,
                           salt, password_hash,
                           created_by, timestamp)
-                          VALUES (?, ?, ?, ?, ?, ?, ?)"""
+                          VALUES (?, ?, ?, ?, ?, ?, ?, ?)"""
         cur.execute(add_employee, (new_key, new_employee, initial_new_employee,
+                                   language,
                                    sqlite3.Binary(salt),
                                    sqlite3.Binary(password_hash),
                                    created_by, timestamp))
@@ -63,6 +75,7 @@ def new_employee(initial_creator=None) -> None:
         show_employees(conn)
 
     conn.close()
+    return
 
 
 def hash_password(password):
@@ -120,6 +133,23 @@ def show_employees(conn) -> None:
     res = data.fetchall()
     for res_employee in res:
         print(res_employee)
+
+
+def pick_language() -> str:
+    pick_language = """
+        Welche Sprache? de
+        Which language? en
+        Quelle langue? fr
+        Que lenguaje? es
+        Quale lingua? it
+        Hangi dil? tr
+
+        --> """
+    language = input(pick_language)
+    if language not in ["de", "en", "fr", "es", "it", "tr"]:
+        language = pick_language()
+
+    return language
 
 
 if __name__ == "__main__":

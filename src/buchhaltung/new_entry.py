@@ -28,23 +28,27 @@ class MenuNewEntry():
             "3": self.new_object,
             "4": self.new_project,
             "5": self.new_service,
-            "6": False
+            "9": False
         }
 
     def display_menu(self) -> None:
-        print("""
+        menu_type_of_new_entry_en = (
+            f"""
+            +{'-' * 77}+
+            | CHOSE WHICH KIND OF NEW ENTRY{' ' * 47}|
+            +{'-' * 77}+
+
             1: New person
             2: New entity
             3: New object
             4: New project
             5: New service
-            6: Quit
+            9: Back
             """)
+        print(menu_type_of_new_entry_en)
 
     def run(self, initial) -> None:
         '''Display menu and respond to choices'''
-#         database_path = os.path.join(os.path.dirname(__file__), "buchhaltung.db")  # noqa
-#         conn = sqlite3.connect(database_path)
 
         while True:
             self.display_menu()

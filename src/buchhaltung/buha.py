@@ -5,7 +5,7 @@ import os
 import sys
 import sqlite3
 from login import LoginMenu
-from new_employee import new_employee
+from new_employee import new_employee, pick_language
 from new_entry import MenuNewEntry
 
 """
@@ -15,30 +15,49 @@ need to do.
 """
 
 
+first_employee_pls_log_in = {
+    "fr": "Premier employé créé. Veuillez vous connecter.",
+    "en": "First employee created. Please log in.",
+    "de": "Erster Mitarbeiter angelegt. Bitte loggen Sie sich ein.",
+    "es": "Ingrese el nombre de la/del empleada/o (nombre, apellido): ",
+    "it": "Inserisci il nome del dipendente (nome, cognome): ",
+    "tr": "Çalışanın adını girin (ad, soyad): ",
+}
+
+
 class Menu():
     """Menu options for adding a new entity."""
 
     def __init__(self):
         database_path = os.path.join(os.path.dirname(__file__), "buchhaltung.db")  # noqa
         if not os.path.isfile(database_path):
-            new_employee()
-            print("First employee created. Please log in.")
+            language = pick_language()
+            new_employee(language)
+            print(first_employee_pls_log_in[language])
             sys.exit()
 
         self.choices = {
             "1": self.new_entry,
             "2": self.change_entry,
             "3": self.search_entry,
-            "4": False
+            "4": self.settings,
+            "9": False
         }
 
     def display_menu(self) -> None:
-        print("""
+        menu_buha_en = (
+            f"""
+            +{'-' * 77}+
+            | BUHA START MENU{' ' * 61}|
+            +{'-' * 77}+
             1: New Entry
             2: Change Entry
             3: Search Entry
-            4: Quit
-            """)
+            4: Settings
+            9: Quit
+            """
+        )
+        print(menu_buha_en)
 
     def run(self) -> None:
         '''Display menu and respond to choices'''
@@ -74,6 +93,9 @@ class Menu():
 
     def search_entry(self, initial) -> None:
         print(f"search entry by {initial}")
+
+    def settings(self, initial) -> None:
+        print(f"change settings (password, language) by {initial}")
 
 
 def main():

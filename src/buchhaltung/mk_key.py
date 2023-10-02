@@ -7,9 +7,9 @@ import secrets
 import sqlite3
 
 
-def generate_table(conn, name_of_table) -> None:
+def generate_table_keys(conn) -> None:
     cur = conn.cursor()
-    new_table = f"CREATE TABLE IF NOT EXISTS '{name_of_table}'(key TEXT)"
+    new_table = "CREATE TABLE IF NOT EXISTS keys (key TEXT)"
     cur.execute(new_table)
     conn.commit()
     return
@@ -18,7 +18,7 @@ def generate_table(conn, name_of_table) -> None:
 def generate_key(alphabet) -> str:
     database_path = os.path.join(os.path.dirname(__file__), "buchhaltung.db")
     conn = sqlite3.connect(database_path)
-    generate_table(conn, "keys")
+    generate_table_keys(conn)
 
     while True:
         key = ''.join(secrets.choice(alphabet) for i in range(8))
@@ -54,11 +54,10 @@ def show_keys(conn) -> None:
 
 
 def mk_key():
-    name_of_table = "keys"
     alphabet = string.ascii_letters + string.digits
     database_path = os.path.join(os.path.dirname(__file__), "buchhaltung.db")
     conn = sqlite3.connect(database_path)
-    generate_table(conn, name_of_table)
+    generate_table_keys(conn)
     key = generate_key(alphabet)
     if 0:
         show_keys(conn)
