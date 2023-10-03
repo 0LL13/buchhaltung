@@ -6,7 +6,8 @@ import hashlib
 import os
 import sqlite3
 import sys
-from typing import Tuple, Optional
+from typing import Tuple
+from .new_employee import generate_table_employees
 
 
 class LoginMenu():
@@ -24,43 +25,59 @@ class LoginMenu():
             self.display_menu()
             choice = input("Enter an option: ")
             if choice == "1":
-                authenticated, initial = login_employee(conn)
+                database_path = os.path.join(os.path.dirname(__file__), "buchhaltung.db")  # noqa
+                conn = sqlite3.connect(database_path)
+                # table employees
+                # key
+                # employee (first name, last name)
+                # initial
+                # language
+                # salt
+                # password_hash
+                # created_by (initial)
+                # timestamp
+                generate_table_employees(conn)
+                authenticated, initial, language = login_employee(conn)
+                conn.commit()
+                conn.close()
                 break
             else:
                 authenticated = False
                 initial = None
+                language = None
                 break
 
-        return authenticated, initial
+        return authenticated, initial, language
 
 
-def generate_table(conn, name_of_table) -> None:
-    cur = conn.cursor()
-    new_table = f"""CREATE TABLE IF NOT EXISTS '{name_of_table}'(
-                    employee_id INTEGER PRIMARY KEY,
-                    key TEXT,
-                    employee TEXT NOT NULL,
-                    initial TEXT,
-                    salt BLOB NOT NULL,
-                    password_hash BLOB NOT NULL
-                    )"""
-    cur.execute(new_table)
-    conn.commit()
-    return
-
-
-def login_employee(conn) -> Tuple[bool, Optional[str]]:
+def login_employee(conn) -> Tuple[bool, str, str]:
 
     initial = input("Enter initials: ")
 
     if initial_in_table(conn, initial):
         password = getpass.getpass("Enter password: ")
         if password_correct(conn, initial, password):
-            return True, initial
+            language = get_language(conn, initial)
+            return True, initial, language
     else:
         print("Unknown initials.")
 
-    return False, None
+    # authenticated, initial, language
+    return False, None, None
+
+
+def get_language(conn, initial) -> str:
+    cur = conn.cursor()
+    get_language = "SELECT language FROM employees WHERE INITIAL = ?"
+    cur.execute(get_language, (initial,))
+    language_tuple = cur.fetchone()
+    if language_tuple:
+        language = language_tuple[0]
+        print("language: ", language)
+        return language
+    else:
+        print("Could not get language")
+        print(language_tuple)
 
 
 def hash_password(password, salt=None):
@@ -72,7 +89,7 @@ def hash_password(password, salt=None):
 
 def initial_in_table(conn, initial) -> bool:
     cur = conn.cursor()
-    res = cur.execute("SELECT initial_new_employee FROM employees")
+    res = cur.execute("SELECT initial FROM employees")
     initials = res.fetchall()
     for res_initial in initials:
         abbr = ''.join(str(c) for c in res_initial)
@@ -85,7 +102,7 @@ def password_correct(conn, initial, password) -> bool:
     cur = conn.cursor()
 
     # Retrieve salt from database
-    get_salt = "SELECT salt FROM employees WHERE INITIAL_NEW_EMPLOYEE = ?"
+    get_salt = "SELECT salt FROM employees WHERE INITIAL = ?"
     cur.execute(get_salt, (initial,))
     salt_tuple = cur.fetchone()
     if salt_tuple:
@@ -94,7 +111,7 @@ def password_correct(conn, initial, password) -> bool:
         return False
 
     # Retrieve hashed password from database
-    get_pw = "SELECT password_hash FROM employees WHERE INITIAL_NEW_EMPLOYEE = ?"  # noqa
+    get_pw = "SELECT password_hash FROM employees WHERE INITIAL = ?"  # noqa
     cur.execute(get_pw, (initial,))
     hashed_pw_tuple = cur.fetchone()
 
@@ -111,14 +128,14 @@ def password_correct(conn, initial, password) -> bool:
 def main() -> None:
     database_path = os.path.join(os.path.dirname(__file__), "buchhaltung.db")
     conn = sqlite3.connect(database_path)
-    generate_table(conn, "employees")
+    generate_table_employees(conn)
 
     menu = LoginMenu()
-    authenticated, initial = menu.run(conn)
+    authenticated, initial, language = menu.run(conn)
     if not authenticated:
         conn.close()
         sys.exit()
-    print(authenticated, initial)
+    print(authenticated, initial, language)
     conn.close()
 
 

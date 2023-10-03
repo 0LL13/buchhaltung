@@ -3,7 +3,7 @@
 # new_entry.py
 # import os
 # import sqlite3
-from person import MenuNewPerson
+from .person import MenuNewPerson
 
 
 """

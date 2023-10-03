@@ -2,11 +2,12 @@
 # -*- coding: utf-8 -*-
 # buha.py
 import os
+import platform
 import sys
 import sqlite3
-from login import LoginMenu
-from new_employee import new_employee, pick_language
-from new_entry import MenuNewEntry
+from resources.login import LoginMenu
+from resources.new_employee import new_employee, pick_language
+from resources.new_entry import MenuNewEntry
 
 """
 Entry menu when calling buha. If there is no employee registered, a first
@@ -29,7 +30,10 @@ class Menu():
     """Menu options for adding a new entity."""
 
     def __init__(self):
-        database_path = os.path.join(os.path.dirname(__file__), "buchhaltung.db")  # noqa
+        if platform.system() == "Windows":
+            database_path = os.path.join(os.path.dirname(__file__), "resources" + "\\" + "buchhaltung.db")  # noqa
+        else:
+            database_path = os.path.join(os.path.dirname(__file__), "resources" + "/" + "buchhaltung.db")  # noqa
         if not os.path.isfile(database_path):
             language = pick_language()
             new_employee(language)
@@ -64,7 +68,7 @@ class Menu():
         database_path = os.path.join(os.path.dirname(__file__), "buchhaltung.db")  # noqa
         conn = sqlite3.connect(database_path)
         login = LoginMenu()
-        authenticated, initial = login.run(conn)
+        authenticated, initial, language = login.run(conn)
         print(authenticated, initial)
         if not authenticated:
             conn.close()

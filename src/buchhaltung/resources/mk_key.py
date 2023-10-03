@@ -21,7 +21,7 @@ def generate_key(alphabet) -> str:
     generate_table_keys(conn)
 
     while True:
-        key = ''.join(secrets.choice(alphabet) for i in range(8))
+        key = ''.join(secrets.choice(alphabet) for i in range(10))
         if (any(c.islower() for c in key)
                 and any(c.isupper() for c in key)
                 and sum(c.isdigit() for c in key) >= 1):

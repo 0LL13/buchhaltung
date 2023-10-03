@@ -9,9 +9,9 @@ import sqlite3
 import sys
 from operator import itemgetter
 from dataclasses import dataclass, field
-from mk_key import mk_key
 from typing import Optional, Tuple
-from resources.helpers import AttrDisplay
+from .mk_key import mk_key
+from .helpers import AttrDisplay
 
 
 @dataclass

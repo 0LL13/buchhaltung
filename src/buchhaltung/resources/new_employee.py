@@ -6,7 +6,7 @@ import getpass
 import hashlib
 import os
 import sqlite3
-from mk_key import mk_key
+from .mk_key import mk_key
 
 
 name_new_employee = {
@@ -25,7 +25,7 @@ def generate_table_employees(conn) -> None:
                          employee_id INTEGER PRIMARY KEY,
                          key TEXT,
                          employee TEXT NOT NULL,
-                         initial_new_employee TEXT,
+                         initial TEXT,
                          language TEXT,
                          salt BLOB NOT NULL,
                          password_hash BLOB NOT NULL,
@@ -39,6 +39,7 @@ def generate_table_employees(conn) -> None:
 
 def new_employee(language, initial_creator=None) -> None:
     database_path = os.path.join(os.path.dirname(__file__), "buchhaltung.db")
+    print(database_path)
     conn = sqlite3.connect(database_path)
     generate_table_employees(conn)
 
@@ -47,6 +48,7 @@ def new_employee(language, initial_creator=None) -> None:
     if not employee_in_table(conn, new_employee):
         cur = conn.cursor()
         new_key = mk_key()
+        # default password, should be changed by employee
         password = "asdfgh"
         salt, password_hash = hash_password(password)
         if initial_creator is None:
@@ -58,7 +60,7 @@ def new_employee(language, initial_creator=None) -> None:
         initial_new_employee = mk_initial(conn, new_employee, 2)
 
         add_employee = """INSERT INTO employees (
-                          key, employee, initial_new_employee, language,
+                          key, employee, initial, language,
                           salt, password_hash,
                           created_by, timestamp)
                           VALUES (?, ?, ?, ?, ?, ?, ?, ?)"""
@@ -107,7 +109,7 @@ def mk_initial(conn, name, length) -> str:
 
 def initial_in_table(conn, initial) -> bool:
     cur = conn.cursor()
-    res = cur.execute("SELECT initial_new_employee FROM employees")
+    res = cur.execute("SELECT initial FROM employees")
     initials = res.fetchall()
     for res_initial in initials:
         abbr = ''.join(str(c) for c in res_initial)

@@ -5,9 +5,10 @@ import datetime
 import os
 import sqlite3
 from dataclasses import dataclass, field
-from mk_key import mk_key
 from typing import Optional
-from resources.name import MenuName
+from .mk_key import mk_key
+from .name import MenuName
+from .new_employee import pick_language
 
 
 @dataclass
@@ -78,11 +79,12 @@ class MenuNewPerson():
             print("names_key: ", names_key)
             first_name = f"{name.first_name}"
             last_name = f"{name.last_name}"
+            language = pick_language()
             if names_key is not None:
                 database_path = os.path.join(os.path.dirname(__file__), "buchhaltung.db")  # noqa
                 conn = sqlite3.connect(database_path)
                 self.generate_table_persons(conn)
-                self.add_person_to_db(conn, initial, first_name, last_name, names_key)  # noqa
+                self.add_person_to_db(conn, initial, first_name, last_name, language, names_key)  # noqa
                 self.show_persons()
             return name, names_key
 
@@ -91,6 +93,13 @@ class MenuNewPerson():
 
     def enter_particulars(self) -> None:
         pass
+
+    def enter_relation(self) -> None:
+        relation = input("intern/extern? ")
+        if relation not in ["intern", "extern"]:
+            print("Either intern or extern. Can be changed later.")
+            relation = self.enter_relation()
+        return relation
 
     def show_persons(self) -> None:
         database_path = os.path.join(os.path.dirname(__file__), "buchhaltung.db")  # noqa
@@ -106,34 +115,39 @@ class MenuNewPerson():
 
     def generate_table_persons(self, conn) -> None:
         cur = conn.cursor()
-        table_names = """CREATE TABLE IF NOT EXISTS persons (
+        table_persons = """CREATE TABLE IF NOT EXISTS persons (
                          key TEXT,
                          initial TEXT,
                          timestamp TEXT,
                          first_name TEXT,
                          last_name TEXT,
+                         language TEXT,
                          names_key TEXT,
+                         relation TEXT,
                          titles_key TEXT,
                          particulars_key TEXT
                          )"""
-        cur.execute(table_names)
+        cur.execute(table_persons)
         conn.commit()
         return
 
-    def add_person_to_db(self, conn, initial, first_name, last_name, names_key,
-                         titles_key=None, particulars_key=None) -> None:
+    def add_person_to_db(self, conn, initial, first_name, last_name, language,
+                         names_key, titles_key=None,
+                         particulars_key=None) -> None:  # noqa
         new_key = mk_key()
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
+        relation = self.enter_relation()
         add_person = """INSERT INTO persons (
                         key, initial, timestamp, first_name, last_name,
-                        names_key, titles_key, particulars_key)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?)"""
+                        language, names_key, relation, titles_key,
+                        particulars_key)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"""
         cur = conn.cursor()
 #        person_list = [new_key, initial, timestamp, first_name, last_name,
-#                       names_key, titles_key, particulars_key]
+#                       language, names_key, titles_key, particulars_key]
         cur.execute(add_person, (new_key, initial, timestamp, first_name,
-                                 last_name, names_key, titles_key,
-                                 particulars_key))
+                                 last_name, language, names_key, relation,
+                                 titles_key, particulars_key))
         conn.commit()
         conn.close()
         return
