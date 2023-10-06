@@ -47,7 +47,7 @@ class MenuNewEntry():
             """)
         print(menu_type_of_new_entry_en)
 
-    def run(self, initial) -> None:
+    def run(self, initial, conn) -> None:
         '''Display menu and respond to choices'''
 
         while True:
@@ -59,14 +59,14 @@ class MenuNewEntry():
             elif choice in self.choices:
                 action = self.choices.get(choice)
                 if action:
-                    action(initial)
+                    action(initial, conn)
             else:
                 print(f"{choice} is not a valid choice.")
 
-    def new_person(self, initial) -> None:
+    def new_person(self, initial, conn) -> None:
         print(f"new person by {initial}")
         menu = MenuNewPerson()
-        menu.run(initial)
+        menu.run(initial, conn)
 
     def new_entity(self, initial) -> None:
         print(f"change entity by {initial}")

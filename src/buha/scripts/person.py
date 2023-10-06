@@ -1,14 +1,30 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+# person.py
 """A set of dataclasses concerning persons and their particulars."""
 import datetime
-import os
 import sqlite3
 from dataclasses import dataclass, field
 from typing import Optional
 from .mk_key import mk_key
 from .name import MenuName
-from .new_employee import pick_language
+
+
+def pick_language() -> str:
+    pick_language = """
+        Welche Sprache? de
+        Which language? en
+        Quelle langue? fr
+        Que lenguaje? es
+        Quale lingua? it
+        Hangi dil? tr
+
+        --> """
+    language = input(pick_language)
+    if language not in ["de", "en", "fr", "es", "it", "tr"]:
+        language = pick_language()
+
+    return language
 
 
 @dataclass
@@ -18,6 +34,7 @@ class Person():
     timestamp: str
     first_name: str
     last_name: str
+    relation: str
     names_key: str
     title_key: Optional[str] = field(default=None)
     particulars_key: Optional[str] = field(default=None)
@@ -50,7 +67,7 @@ class MenuNewPerson():
             """)
         print(menu_person_entry_en)
 
-    def run(self, initial) -> None:
+    def run(self, initial: str, conn: sqlite3.Connection) -> None:
         while True:
             self.display_menu()
             choice = input("Enter an option: ")
@@ -59,15 +76,15 @@ class MenuNewPerson():
             else:
                 action = self.choices.get(choice)
                 if action and choice == "4":
-                    action()
+                    action(initial, conn)
                 elif action:
-                    name, names_key = action(initial)
+                    name, names_key = action(initial, conn)
                 else:
                     print(f"{choice} is not a valid choice.")
 
-    def enter_name(self, initial) -> None:
+    def enter_name(self, initial, conn) -> None:
         menu = MenuName()
-        res = menu.run(initial)
+        res = menu.run(initial, conn)
         if not res:
             print("No values for menu.run(initial)")
         else:
@@ -79,13 +96,12 @@ class MenuNewPerson():
             print("names_key: ", names_key)
             first_name = f"{name.first_name}"
             last_name = f"{name.last_name}"
+            print("Chose language for newly created person.")
             language = pick_language()
             if names_key is not None:
-                database_path = os.path.join(os.path.dirname(__file__), "buchhaltung.db")  # noqa
-                conn = sqlite3.connect(database_path)
                 self.generate_table_persons(conn)
                 self.add_person_to_db(conn, initial, first_name, last_name, language, names_key)  # noqa
-                self.show_persons()
+                self.show_persons(initial, conn)
             return name, names_key
 
     def enter_titles(self) -> None:
@@ -101,16 +117,12 @@ class MenuNewPerson():
             relation = self.enter_relation()
         return relation
 
-    def show_persons(self) -> None:
-        database_path = os.path.join(os.path.dirname(__file__), "buchhaltung.db")  # noqa
-        conn = sqlite3.connect(database_path)
+    def show_persons(self, initial, conn) -> None:
         cur = conn.cursor()
-        show_persons = "SELECT * FROM persons"
-        res = cur.execute(show_persons)
+        res = cur.execute("SELECT * FROM persons")
         res_persons = res.fetchall()
         for person in res_persons:
             print(person)
-        conn.close()
         return
 
     def generate_table_persons(self, conn) -> None:
@@ -134,7 +146,7 @@ class MenuNewPerson():
     def add_person_to_db(self, conn, initial, first_name, last_name, language,
                          names_key, titles_key=None,
                          particulars_key=None) -> None:  # noqa
-        new_key = mk_key()
+        new_key = mk_key(conn)
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
         relation = self.enter_relation()
         add_person = """INSERT INTO persons (
@@ -149,7 +161,6 @@ class MenuNewPerson():
                                  last_name, language, names_key, relation,
                                  titles_key, particulars_key))
         conn.commit()
-        conn.close()
         return
 
 

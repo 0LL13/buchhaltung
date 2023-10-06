@@ -1,10 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # mk_key.py
-import os
 import string
 import secrets
-import sqlite3
 
 
 def generate_table_keys(conn) -> None:
@@ -15,17 +13,10 @@ def generate_table_keys(conn) -> None:
     return
 
 
-def generate_key(alphabet) -> str:
-    database_path = os.path.join(os.path.dirname(__file__), "buchhaltung.db")
-    conn = sqlite3.connect(database_path)
+def generate_key(conn) -> str:
     generate_table_keys(conn)
-
-    while True:
-        key = ''.join(secrets.choice(alphabet) for i in range(10))
-        if (any(c.islower() for c in key)
-                and any(c.isupper() for c in key)
-                and sum(c.isdigit() for c in key) >= 1):
-            break
+    alphanumeric = string.ascii_letters + string.digits
+    key = ''.join(secrets.choice(alphanumeric) for _ in range(10))
 
     if not key_in_db(conn, key):
         cur = conn.cursor()
@@ -53,15 +44,12 @@ def show_keys(conn) -> None:
         print(res_key)
 
 
-def mk_key():
-    alphabet = string.ascii_letters + string.digits
-    database_path = os.path.join(os.path.dirname(__file__), "buchhaltung.db")
-    conn = sqlite3.connect(database_path)
+def mk_key(conn):
     generate_table_keys(conn)
-    key = generate_key(alphabet)
+    key = generate_key(conn)
     if 0:
         show_keys(conn)
-    conn.close()
+    conn.commit()
     return key
 
 

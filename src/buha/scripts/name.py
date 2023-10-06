@@ -3,7 +3,6 @@
 # name.py
 """A set of dataclasses concerning persons and their particulars."""
 import datetime
-import os
 import re
 import sqlite3
 import sys
@@ -98,9 +97,14 @@ class MenuName():
         )
         print(menu_name_particulars_en)
 
-    def run(self, initial, use_prepared_values=False, prepared_values=None) -> None:  # noqa
+    def run(self, initial: str,
+            conn: sqlite3.Connection,
+            use_prepared_values: bool = False,
+            prepared_values: dict = None) -> None:
+
         """Display Menu, gather entries in dict "entries", and finally put
         the data in new instance of Name."""
+
         if not use_prepared_values:
             while True:
                 self.display_menu()
@@ -110,7 +114,7 @@ class MenuName():
                 else:
                     action = self.choices.get(choice)
                     if action and choice == "8":
-                        name, key = action(initial)
+                        name, key = action(initial, conn)
                         return name, key
                     elif action:
                         action()
@@ -119,9 +123,9 @@ class MenuName():
         elif prepared_values is not None:
             self.entries.update(prepared_values)
 
-    def commit(self, initial) -> Tuple:
+    def commit(self, initial, conn) -> Tuple:
         name = self.generate_name_instance()
-        key = self.commit_name_to_db(initial, name)
+        key = self.commit_name_to_db(initial, name, conn)
         return name, key
 
     def enter_firstname(self):
@@ -231,26 +235,20 @@ class MenuName():
         conn.commit()
         return
 
-    def commit_name_to_db(self, initial, name) -> str:
-        database_path = os.path.join(os.path.dirname(__file__), "buchhaltung.db")  # noqa
-        conn = sqlite3.connect(database_path)
+    def commit_name_to_db(self, initial, name, conn) -> str:
         self.generate_table_names(conn)
         if not self.name_already_in_db(conn, name):
             key = self.add_name_to_db(conn, initial, name)
-            conn.close()
+            conn.commit()
             return key
         else:
             message_name_exists_en = "Name already exists. Create entry anyway? y/N: "  # noqa
             choice = input(message_name_exists_en)
             if choice == "y":
                 key = self.add_name_to_db(conn, initial, name)
-                conn.close()
+                conn.commit()
                 return key
-            else:
-                conn.close()
-                return
         self.show_names(conn)
-        conn.close()
         return
 
     def add_name_to_db(self, conn, initial, name) -> str:
@@ -258,7 +256,7 @@ class MenuName():
                       key, initial, timestamp, first_name, middle_names,
                       last_name, nickname, maiden_name, suffix, salutation)
                       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"""
-        new_key = mk_key()
+        new_key = mk_key(conn)
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
 
         cur = conn.cursor()

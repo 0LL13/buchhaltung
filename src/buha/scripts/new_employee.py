@@ -13,9 +13,9 @@ name_new_employee = {
     "fr": "Entrez le nom de l'employé (prénom, nom): ",
     "en": "Enter name of employee (first name, last name): ",
     "de": "Name der/s Mitarbeiterin/s (Vorname, Name): ",
-    "es": "Primer empleado creado. Por favor Iniciar sesión.",
-    "it": "Primo dipendente creato. Accedere prego.",
-    "tr": "İlk çalışan oluşturuldu. Lütfen giriş yapın.",
+    "es": "Ingrese el nombre del empleado (nombre, apellido): ",
+    "it": "Inserisci il nome del dipendente (nome, cognome): ",
+    "tr": "Çalışanın adını girin (ad, soyad): ",
 }
 
 
@@ -27,6 +27,7 @@ def generate_table_employees(conn) -> None:
                          employee TEXT NOT NULL,
                          initial TEXT,
                          language TEXT,
+                         company TEXT,
                          salt BLOB NOT NULL,
                          password_hash BLOB NOT NULL,
                          created_by TEXT,
@@ -37,17 +38,13 @@ def generate_table_employees(conn) -> None:
     return
 
 
-def new_employee(language, initial_creator=None) -> None:
-    database_path = os.path.join(os.path.dirname(__file__), "buchhaltung.db")
-    print(database_path)
-    conn = sqlite3.connect(database_path)
+def new_employee(language: str, company: str, conn: sqlite3.Connection,
+                 initial_creator: str = None) -> None:
     generate_table_employees(conn)
-
     new_employee = input(name_new_employee[language])
 
     if not employee_in_table(conn, new_employee):
-        cur = conn.cursor()
-        new_key = mk_key()
+        new_key = mk_key(conn)
         # default password, should be changed by employee
         password = "asdfgh"
         salt, password_hash = hash_password(password)
@@ -60,12 +57,13 @@ def new_employee(language, initial_creator=None) -> None:
         initial_new_employee = mk_initial(conn, new_employee, 2)
 
         add_employee = """INSERT INTO employees (
-                          key, employee, initial, language,
+                          key, employee, initial, language, company,
                           salt, password_hash,
                           created_by, timestamp)
-                          VALUES (?, ?, ?, ?, ?, ?, ?, ?)"""
+                          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"""
+        cur = conn.cursor()
         cur.execute(add_employee, (new_key, new_employee, initial_new_employee,
-                                   language,
+                                   language, company,
                                    sqlite3.Binary(salt),
                                    sqlite3.Binary(password_hash),
                                    created_by, timestamp))
@@ -76,7 +74,6 @@ def new_employee(language, initial_creator=None) -> None:
     if 1:
         show_employees(conn)
 
-    conn.close()
     return
 
 
@@ -135,23 +132,6 @@ def show_employees(conn) -> None:
     res = data.fetchall()
     for res_employee in res:
         print(res_employee)
-
-
-def pick_language() -> str:
-    pick_language = """
-        Welche Sprache? de
-        Which language? en
-        Quelle langue? fr
-        Que lenguaje? es
-        Quale lingua? it
-        Hangi dil? tr
-
-        --> """
-    language = input(pick_language)
-    if language not in ["de", "en", "fr", "es", "it", "tr"]:
-        language = pick_language()
-
-    return language
 
 
 if __name__ == "__main__":
