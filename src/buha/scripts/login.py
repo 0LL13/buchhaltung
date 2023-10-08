@@ -8,6 +8,7 @@ import re
 import sqlite3
 import sys
 from typing import Tuple
+from .helpers import clear_screen
 from .new_employee import generate_table_employees
 
 
@@ -15,6 +16,7 @@ class LoginMenu():
     """Menu options for starting buha."""
 
     def display_menu(self, company_name) -> None:
+        clear_screen()
         company_name = company_name[:-3]
         company_name = re.sub("_", " ", company_name)
         length_name = 76 - len(company_name)

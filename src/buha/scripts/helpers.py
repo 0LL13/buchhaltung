@@ -1,11 +1,28 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+# helpers.py
 """Helper functions: exceptions, print style, ..."""
+import os
+import platform
 from prettytable import PrettyTable
 from .attr_dicts import german_attrs  # type: ignore # isort:skip # noqa
 
 
-language = "german"
+language = "de"
+
+
+def is_posix() -> bool:
+    if platform.system() == "Windows":
+        return False
+    else:
+        return True
+
+
+def clear_screen() -> None:
+    if is_posix():
+        os.system("clear")
+    else:
+        os.system("cls")
 
 
 class TooManyFirstNames(Exception):

@@ -3,6 +3,7 @@
 # new_entry.py
 import re
 import sqlite3
+from .helpers import clear_screen
 from .person import MenuNewPerson
 
 
@@ -32,6 +33,7 @@ class MenuNewEntry():
         }
 
     def display_menu(self, company_name) -> None:
+        clear_screen()
         company_name = company_name[:-3]
         company_name = re.sub("_", " ", company_name)
         length_name = 76 - len(company_name)

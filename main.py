@@ -2,12 +2,13 @@
 # -*- coding: utf-8 -*-
 # main.py
 import os
-import platform
 import re
 import sqlite3
 import sys
 from fuzzywuzzy import fuzz
 from typing import Tuple
+from src.buha.scripts.helpers import clear_screen
+from src.buha.scripts.helpers import is_posix
 from src.buha.scripts.login import LoginMenu
 from src.buha.scripts.new_employee import new_employee
 from src.buha.scripts.new_entry import MenuNewEntry
@@ -51,7 +52,7 @@ def initialize() -> Tuple[sqlite3.Connection, str]:
         return conn, language, company_name
 
     # check if it was a misspelling
-    match = check_for_matches(company_name)
+    match = check_for_matches(company_name, language)
     if match is not None:
         print("initialize, match: ", match)
         conn = activate_database(match)
@@ -74,6 +75,8 @@ def initialize() -> Tuple[sqlite3.Connection, str]:
 
 
 def pick_language() -> str:
+    clear_screen()
+
     pick_language_prompt = f"""
         +{'-' * 77}+
         | BUHA START MENU{' ' * 61}|
@@ -122,10 +125,10 @@ def path_to_database() -> str:
         "posix": "src" + "/" + "buha" + "/" + "data" + "/",
     }
 
-    if platform.system() == "Windows":
-        path = path_to_database["windows"]
-    else:
+    if is_posix():
         path = path_to_database["posix"]
+    else:
+        path = path_to_database["windows"]
 
     print("path_to_database: ", path)
     return path
@@ -141,7 +144,7 @@ def activate_database(company_name: str) -> sqlite3.Connection:
 
 # type hint best practice for v3.10 or above
 # https://stackoverflow.com/a/69440627/6597765
-def check_for_matches(company_name: str) -> str | None:
+def check_for_matches(company_name: str, language: str) -> str | None:
     targets = []
 
     threshold = 50
@@ -166,6 +169,7 @@ def check_for_matches(company_name: str) -> str | None:
 
     repeat = input("Check again? y/N ")
     if repeat == "y":
+        company_name = state_company(language)
         return check_for_matches(company_name)
 
     match = None
@@ -186,6 +190,7 @@ class StartMenu():
         }
 
     def display_menu(self, company_name, language) -> None:
+        clear_screen()
         company_name = company_name[:-3]
         company_name = re.sub("_", " ", company_name)
         length_name = 76 - len(company_name)

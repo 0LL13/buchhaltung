@@ -8,6 +8,7 @@ import sqlite3
 import sys
 from dataclasses import dataclass, field
 from typing import Optional, Tuple
+from .helpers import clear_screen
 from .mk_key import mk_key
 from .name import MenuName
 
@@ -64,6 +65,7 @@ class MenuNewPerson():
         }
 
     def display_menu(self, company_name):
+        clear_screen()
         company_name = company_name[:-3]
         company_name = re.sub("_", " ", company_name)
         length_name = 76 - len(company_name)
@@ -184,8 +186,6 @@ class MenuNewPerson():
                         particulars_key)
                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"""
         cur = conn.cursor()
-#        person_list = [new_key, initial, timestamp, first_name, last_name,
-#                       language, names_key, titles_key, particulars_key]
         cur.execute(add_person, (new_key, initial, timestamp, first_name,
                                  last_name, language, names_key, relation,
                                  titles_key, particulars_key))
