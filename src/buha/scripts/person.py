@@ -3,15 +3,21 @@
 # person.py
 """A set of dataclasses concerning persons and their particulars."""
 import datetime
+import re
 import sqlite3
+import sys
 from dataclasses import dataclass, field
-from typing import Optional
+from typing import Optional, Tuple
 from .mk_key import mk_key
 from .name import MenuName
 
 
 def pick_language() -> str:
-    pick_language = """
+    pick_language_prompt = f"""
+        +{'-' * 77}+
+        | BUHA START MENU{' ' * 61}|
+        +{'-' * 77}+
+
         Welche Sprache? de
         Which language? en
         Quelle langue? fr
@@ -19,9 +25,14 @@ def pick_language() -> str:
         Quale lingua? it
         Hangi dil? tr
 
+        Exit? x
+
         --> """
-    language = input(pick_language)
-    if language not in ["de", "en", "fr", "es", "it", "tr"]:
+
+    language = input(pick_language_prompt)
+    if language == "x":
+        sys.exit()
+    elif language not in ["de", "en", "fr", "es", "it", "tr"]:
         language = pick_language()
 
     return language
@@ -52,41 +63,58 @@ class MenuNewPerson():
             "9": False,
         }
 
-    def display_menu(self):
-        menu_person_entry_en = (
-            f"""
-            +{'-' * 77}+
-            | PERSON ENTRY{' ' * 64}|
-            +{'-' * 77}+
+    def display_menu(self, company_name):
+        company_name = company_name[:-3]
+        company_name = re.sub("_", " ", company_name)
+        length_name = 76 - len(company_name)
+        prompt = "PERSON ENTRY"
+        length_prompt = 76 - len(prompt)
+        company_line = f"| {company_name}" + ' ' * length_name + "|"
+        action_prompt = "| " + prompt + ' ' * length_prompt + "|"
+        menu_person_entry = f"""
+        +{'-' * 77}+
+        {company_line}
+        +{'-' * 77}+
+        {action_prompt}
+        +{'-' * 77}+
 
-            1: Name
-            2: Titles
-            3: Additional personal data
-            4: Show persons
-            9: Back
-            """)
-        print(menu_person_entry_en)
+        1: Name
+        2: Titles
+        3: Additional personal data
+        4: Show persons
+        9: Back
 
-    def run(self, initial: str, conn: sqlite3.Connection) -> None:
+        """
+        print(menu_person_entry)
+
+    def run(self, initial: str,
+            conn: sqlite3.Connection,
+            company_name: str) -> Tuple[str | None, str | None]:
         while True:
-            self.display_menu()
-            choice = input("Enter an option: ")
+            self.display_menu(company_name)
+            choice = input("        Enter an option: ")
             if not self.choices.get(choice):
+                name, names_key = None, None
                 break
             else:
                 action = self.choices.get(choice)
                 if action and choice == "4":
                     action(initial, conn)
                 elif action:
-                    name, names_key = action(initial, conn)
+                    name, names_key = action(initial, conn, company_name)
                 else:
-                    print(f"{choice} is not a valid choice.")
+                    print(f"        {choice} is not a valid choice.")
 
-    def enter_name(self, initial, conn) -> None:
+        return name, names_key
+
+    def enter_name(self, initial: str,
+                   conn: sqlite3.Connection,
+                   company_name: str) -> Tuple[str | None, str | None]:
         menu = MenuName()
-        res = menu.run(initial, conn)
-        if not res:
+        res = menu.run(initial, conn, company_name)
+        if res == (None, None):
             print("No values for menu.run(initial)")
+            name, names_key = None, None
         else:
             print("res from enter_name")
             print(res)
@@ -96,13 +124,14 @@ class MenuNewPerson():
             print("names_key: ", names_key)
             first_name = f"{name.first_name}"
             last_name = f"{name.last_name}"
-            print("Chose language for newly created person.")
+            print("        Chose language for newly created person.")
             language = pick_language()
             if names_key is not None:
                 self.generate_table_persons(conn)
                 self.add_person_to_db(conn, initial, first_name, last_name, language, names_key)  # noqa
                 self.show_persons(initial, conn)
-            return name, names_key
+
+        return name, names_key
 
     def enter_titles(self) -> None:
         pass
@@ -111,9 +140,9 @@ class MenuNewPerson():
         pass
 
     def enter_relation(self) -> None:
-        relation = input("intern/extern? ")
+        relation = input(f"{'intern/extern? ' : <8}")
         if relation not in ["intern", "extern"]:
-            print("Either intern or extern. Can be changed later.")
+            print("        Either intern or extern. Can be changed later.")
             relation = self.enter_relation()
         return relation
 

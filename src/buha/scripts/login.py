@@ -4,7 +4,9 @@
 import getpass
 import hashlib
 import os
+import re
 import sqlite3
+import sys
 from typing import Tuple
 from .new_employee import generate_table_employees
 
@@ -12,17 +14,35 @@ from .new_employee import generate_table_employees
 class LoginMenu():
     """Menu options for starting buha."""
 
-    def display_menu(self) -> None:
-        print("""
-            1: Login
-            2: Quit
-            """)
+    def display_menu(self, company_name) -> None:
+        company_name = company_name[:-3]
+        company_name = re.sub("_", " ", company_name)
+        length_name = 76 - len(company_name)
+        prompt = "LOGIN MENU"
+        length_prompt = 76 - len(prompt)
+        company_line = f"| {company_name}" + ' ' * length_name + "|"
+        action_prompt = "| " + prompt + ' ' * length_prompt + "|"
+        login_menu = f"""
+        +{'-' * 77}+
+        {company_line}
+        +{'-' * 77}+
+        {action_prompt}
+        +{'-' * 77}+
 
-    def run(self, conn: sqlite3.Connection, language: str) -> Tuple[bool, str]:  # noqa
+        1: Login
+        2: Quit
+
+        """
+
+        print(login_menu)
+
+    def run(self, conn: sqlite3.Connection,
+            language: str,
+            company_name: str) -> Tuple[bool, str]:
         '''Display menu and respond to choices'''
         while True:
-            self.display_menu()
-            choice = input("Enter an option: ")
+            self.display_menu(company_name)
+            choice = input("        Enter an option: ")
             if choice == "1":
                 generate_table_employees(conn)
                 # table employees:
@@ -35,28 +55,29 @@ class LoginMenu():
                 # password_hash
                 # created_by (initial)
                 # timestamp
-                authenticated, initial = login_employee(conn, language)
+                authenticated, initial = login_employee(conn, language, company_name)  # noqa
                 conn.commit()
                 print("authenticated and initials: ", initial)
                 break
             else:
                 authenticated = False
                 initial = None
-                break
+                # make sure the program exits
+                sys.exit()
 
         return authenticated, initial
 
 
-def login_employee(conn, language) -> Tuple[bool, str]:
+def login_employee(conn, language, company_name) -> Tuple[bool, str]:
 
-    initial = input("Enter initials: ")
+    initial = input("        Enter initials: ")
 
     if initial_in_table(conn, initial):
-        password = getpass.getpass("Enter password: ")
+        password = getpass.getpass("        Enter password: ")
         if password_correct(conn, initial, password):
             return True, initial
     else:
-        print("Unknown initials.")
+        print("        Unknown initials.")
 
     # authenticated, initial
     return False, None

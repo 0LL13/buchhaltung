@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # new_entry.py
-# import os
-# import sqlite3
+import re
+import sqlite3
 from .person import MenuNewPerson
 
 
@@ -31,42 +31,57 @@ class MenuNewEntry():
             "9": False
         }
 
-    def display_menu(self) -> None:
-        menu_type_of_new_entry_en = (
-            f"""
-            +{'-' * 77}+
-            | CHOSE WHICH KIND OF NEW ENTRY{' ' * 47}|
-            +{'-' * 77}+
+    def display_menu(self, company_name) -> None:
+        company_name = company_name[:-3]
+        company_name = re.sub("_", " ", company_name)
+        length_name = 76 - len(company_name)
+        prompt = "CHOSE KIND OF ENTRY"
+        length_prompt = 76 - len(prompt)
+        company_line = f"| {company_name}" + ' ' * length_name + "|"
+        chose_action = "| " + prompt + ' ' * length_prompt + "|"
 
-            1: New person
-            2: New entity
-            3: New object
-            4: New project
-            5: New service
-            9: Back
-            """)
-        print(menu_type_of_new_entry_en)
+        menu_type_of_new_entry = f"""
+        +{'-' * 77}+
+        {company_line}
+        +{'-' * 77}+
+        {chose_action}
+        +{'-' * 77}+
 
-    def run(self, initial, conn) -> None:
+        1: New person
+        2: New entity
+        3: New object
+        4: New project
+        5: New service
+        9: Back
+
+        """
+
+        print(menu_type_of_new_entry)
+
+    def run(self, initial, conn, company_name) -> None:
         '''Display menu and respond to choices'''
 
         while True:
-            self.display_menu()
-            choice = input("Enter an option: ")
+            self.display_menu(company_name)
+            choice = input("        Enter an option: ")
 
             if not self.choices.get(choice):
                 break
             elif choice in self.choices:
                 action = self.choices.get(choice)
+                print("action iin new_entry: ", action)
                 if action:
-                    action(initial, conn)
+                    action(initial, conn, company_name)
             else:
                 print(f"{choice} is not a valid choice.")
 
-    def new_person(self, initial, conn) -> None:
+    def new_person(self, initial: str,
+                   conn: sqlite3.Connection,
+                   company_name: str) -> None:
+
         print(f"new person by {initial}")
         menu = MenuNewPerson()
-        menu.run(initial, conn)
+        menu.run(initial, conn, company_name)
 
     def new_entity(self, initial) -> None:
         print(f"change entity by {initial}")

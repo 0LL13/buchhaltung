@@ -46,7 +46,7 @@ def new_employee(language: str, company: str, conn: sqlite3.Connection,
     if not employee_in_table(conn, new_employee):
         new_key = mk_key(conn)
         # default password, should be changed by employee
-        password = "asdfgh"
+        password = "asd"
         salt, password_hash = hash_password(password)
         if initial_creator is None:
             created_by = getpass.getuser()

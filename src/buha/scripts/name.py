@@ -75,40 +75,50 @@ class MenuName():
             "9": False,
         }
 
-    def display_menu(self) -> None:
-        menu_name_particulars_en = (
-            f"""
-            +{'-' * 77}+
-            | BASIC NAME PARTICULARS{' ' * 54}|
-            +{'-' * 77}+
+    def display_menu(self, company_name) -> None:
+        company_name = company_name[:-3]
+        company_name = re.sub("_", " ", company_name)
+        length_name = 76 - len(company_name)
+        prompt = "BASIC NAME PARTICULARS"
+        length_prompt = 76 - len(prompt)
+        company_line = f"| {company_name}" + ' ' * length_name + "|"
+        action_prompt = "| " + prompt + ' ' * length_prompt + "|"
+        menu_name_particulars = f"""
+        +{'-' * 77}+
+        {company_line}
+        +{'-' * 77}+
+        {action_prompt}
+        +{'-' * 77}+
 
-            Fields with (*) are obligatory
+        Fields with (*) are obligatory
 
-            1: (*) First Name
-            2: Middle Name(s)
-            3: (*) Last Name
-            4: Nickname
-            5: Maiden Name
-            6: Generational Suffix (Jr., Sr.)
-            7: Salutation
-            8: Commit and back
-            9: Back
-            """
-        )
-        print(menu_name_particulars_en)
+        1: (*) First Name
+        2: Middle Name(s)
+        3: (*) Last Name
+        4: Nickname
+        5: Maiden Name
+        6: Generational Suffix (Jr., Sr.)
+        7: Salutation
+        8: Commit and back
+        9: Back
+
+        """
+
+        print(menu_name_particulars)
 
     def run(self, initial: str,
             conn: sqlite3.Connection,
+            company_name: str,
             use_prepared_values: bool = False,
-            prepared_values: dict = None) -> None:
+            prepared_values: dict = None) -> Tuple[str | None, str | None]:
 
         """Display Menu, gather entries in dict "entries", and finally put
         the data in new instance of Name."""
 
         if not use_prepared_values:
             while True:
-                self.display_menu()
-                choice = input("Enter an option: ")
+                self.display_menu(company_name)
+                choice = input("        Enter an option: ")
                 if not self.choices.get(choice):
                     break
                 else:
@@ -122,6 +132,8 @@ class MenuName():
                         print(f"{choice} is not a valid choice.")
         elif prepared_values is not None:
             self.entries.update(prepared_values)
+
+        return None, None
 
     def commit(self, initial, conn) -> Tuple:
         name = self.generate_name_instance()
