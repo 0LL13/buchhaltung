@@ -1,19 +1,19 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # main.py
-import getpass
 import os
 import re
 import sqlite3
+import sys
+# import threading
+from fuzzywuzzy import fuzz
 from typing import Tuple
 
 from src.buha.scripts.helpers import clear_screen
-from src.buha.scripts.helpers import check_database  # looking for databases
-from src.buha.scripts.helpers import state_company
-from src.buha.scripts.helpers import path_to_database
+from src.buha.scripts.helpers import is_posix
 from src.buha.scripts.helpers import pick_language
 from src.buha.scripts.login import LoginMenu
-from src.buha.scripts.person import MenuNewPerson as NewPerson
+from src.buha.scripts.new_employee import new_employee
 from src.buha.scripts.new_entry import MenuNewEntry
 
 """
@@ -35,25 +35,88 @@ first_employee_pls_log_in = {
 }
 
 
+state_company_prompt = {
+    "fr": "        Indiquez votre entreprise: ",
+    "en": "        State your company: ",
+    "de": "        Name Ihres Unternehmens: ",
+    "es": "        Indique su empresa: ",
+    "it": "        Dichiara la tua azienda: ",
+    "tr": "        Şirketinizi belirtin: ",
+}
+
+
 def initialize() -> Tuple[sqlite3.Connection, str, str]:
     """
     - check if database exists
-    - if not exists:
-        - start new db
-        - create first employee
     - if exists:
         - login
         - language should be clear after login, but can be changed in settings
         - give option to not login and create new db instead
+    - if not exists:
+        - start new db
+        - create first employee
     """
-    targets = check_database()  # returns list with databases
-    if targets == []:   # no database found
-        language = pick_language
-        company_name = state_company  # database will be named after company
-        created_by = getpass.getuser()
-        conn = activate_database(company_name)
-        new_person = NewPerson()
-        new_person.enter_name(created_by, conn, company_name, language)
+    language = pick_language()
+    company_name = state_company(language)
+    print("initialize, company_name: ", company_name)
+
+    if database_exists(company_name):
+        conn, db_lock = activate_database(company_name)
+        return conn, language, company_name
+
+    # check if it was a misspelling
+    match = check_for_matches(company_name, language)
+    if match is not None:
+        print("initialize, match: ", match)
+        conn = activate_database(match)
+
+        return conn, language, match
+
+    # check if a new database is wanted
+    else:
+        print("initialize, no match: ", company_name)
+        choice = input("Do you want to start a new database? y/N ")
+        if choice == "y":
+            conn = activate_database(company_name)
+            new_employee(language, conn)
+            print(first_employee_pls_log_in[language])
+            conn = activate_database(company_name)
+
+            return conn, language, company_name
+        else:
+            sys.exit()
+
+
+def state_company(language: str) -> str:
+    company_name = input(state_company_prompt[language])
+    company_name = re.sub(' +', '_', company_name) + ".db"
+    company_name = company_name.strip()
+    return company_name
+
+
+def database_exists(company_name: str) -> bool:
+    path = path_to_database()
+    database_path = os.path.join(os.path.dirname(__file__), path + company_name)  # noqa
+    if not os.path.isfile(database_path):
+        print("inside database_exists: no file found")
+        return False
+    print("inside database_exists: file exists")
+    return True
+
+
+def path_to_database() -> str:
+    path_to_database = {
+        "windows": "src" + "\\" + "buha" + "\\" + "data" + "\\",
+        "posix": "src" + "/" + "buha" + "/" + "data" + "/",
+    }
+
+    if is_posix():
+        path = path_to_database["posix"]
+    else:
+        path = path_to_database["windows"]
+
+    print("path_to_database: ", path)
+    return path
 
 
 def activate_database(company_name: str) -> sqlite3.Connection:
@@ -62,6 +125,45 @@ def activate_database(company_name: str) -> sqlite3.Connection:
     database_path = os.path.join(os.path.dirname(__file__), path + company_name)  # noqa
     conn = sqlite3.connect(database_path)
     return conn
+
+
+# type hint best practice for v3.10 or above
+# https://stackoverflow.com/a/69440627/6597765
+def check_for_matches(company_name: str, language: str) -> str | None:
+    targets = []
+
+    threshold = 50
+    print("inside check_for_matches")
+    path = path_to_database()
+    database_path = os.path.join(os.path.dirname(__file__), path)
+    print("database_path: ", database_path)
+    for (dirpath, dirnames, filenames) in os.walk(database_path):
+        for filename in filenames:
+            if filename.endswith(".db"):
+                targets.append(filename)
+    print("check_for_matches, targets: ", targets)
+    if targets == []:
+        match = None
+        return match
+
+    scores = [fuzz.ratio(target, company_name) for target in targets]
+    if scores:
+        best_match_index = scores.index(max(scores))
+        best_match = targets[best_match_index]
+
+        if max(scores) > threshold:
+            choice = input(f"Did you mean {best_match}? y/N: ")
+            if choice == "y":
+                print("best_match: ", best_match)
+                return best_match
+
+    repeat = input("Check again? y/N ")
+    if repeat == "y":
+        company_name = state_company(language)
+        return check_for_matches(company_name, language)
+
+    match = None
+    return match
 
 
 class StartMenu():
@@ -149,6 +251,10 @@ class StartMenu():
         if authenticated:
             menu = StartMenu()
             menu.run(conn, language, initial, company_name)
+
+#     def release_connection(self, conn: sqlite3.Connection) -> None:
+#         with threading.Lock():
+#             connection_pool.append(conn)
 
     def change_entry(self, initial: str) -> None:
         print(f"change entry by {initial}")

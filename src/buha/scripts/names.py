@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# name.py
-"""A set of dataclasses concerning persons and their particulars."""
+# names.py
+"""Dataclass Name and menu to enter names. Check if entry with given names
+already exists. If not, create one entry in sqlite3 table "persons" and one
+entry in "names", with names referencing to persons via foreign key."""
 import datetime
 import re
 import sqlite3
@@ -9,8 +11,8 @@ import sys
 from operator import itemgetter
 from dataclasses import dataclass, field
 from typing import Optional, Tuple
-from .mk_key import mk_key
 from .helpers import AttrDisplay
+from .helpers import create_headline
 
 
 @dataclass
@@ -75,21 +77,15 @@ class MenuName():
             "9": False,
         }
 
-    def display_menu(self, company_name) -> None:
-        company_name = company_name[:-3]
-        company_name = re.sub("_", " ", company_name)
-        length_name = 76 - len(company_name)
-        prompt = "BASIC NAME PARTICULARS"
-        length_prompt = 76 - len(prompt)
-        company_line = f"| {company_name}" + ' ' * length_name + "|"
-        action_prompt = "| " + prompt + ' ' * length_prompt + "|"
-        menu_name_particulars = f"""
-        +{'-' * 77}+
-        {company_line}
-        +{'-' * 77}+
-        {action_prompt}
-        +{'-' * 77}+
+    def reset_entries(self):
+        self.entries = {key: None for key in self.entries}
 
+    def display_menu(self, company_name: str, language: str) -> None:
+        prompt = "BASIC NAME PARTICULARS"
+        menu_names_head = create_headline(company_name, language, prompt)
+        print(menu_names_head)
+
+        menu_names_entry = """
         Fields with (*) are obligatory
 
         1: (*) First Name
@@ -101,44 +97,38 @@ class MenuName():
         7: Salutation
         8: Commit and back
         9: Back
-
         """
 
-        print(menu_name_particulars)
+        print(menu_names_entry)
 
     def run(self, initial: str,
             conn: sqlite3.Connection,
-            company_name: str,
-            use_prepared_values: bool = False,
-            prepared_values: dict = None) -> Tuple[str | None, str | None]:
+            company_name: str) -> Tuple[str | None, str | None]:
 
         """Display Menu, gather entries in dict "entries", and finally put
         the data in new instance of Name."""
 
-        if not use_prepared_values:
-            while True:
-                self.display_menu(company_name)
-                choice = input("        Enter an option: ")
-                if not self.choices.get(choice):
-                    break
+        while True:
+            self.display_menu(company_name)
+            choice = input("        Enter an option: ")
+            if not self.choices.get(choice):
+                break
+            else:
+                action = self.choices.get(choice)
+                if action and choice == "8":
+                    name = action(initial, conn)
+                    return name
+                elif action:
+                    action()
                 else:
-                    action = self.choices.get(choice)
-                    if action and choice == "8":
-                        name, key = action(initial, conn)
-                        return name, key
-                    elif action:
-                        action()
-                    else:
-                        print(f"{choice} is not a valid choice.")
-        elif prepared_values is not None:
-            self.entries.update(prepared_values)
+                    print(f"{choice} is not a valid choice.")
 
         return None, None
 
-    def commit(self, initial, conn) -> Tuple:
+    def commit(self, conn: sqlite3.Connection, created_by: str) -> Tuple:
+
         name = self.generate_name_instance()
-        key = self.commit_name_to_db(initial, name, conn)
-        return name, key
+        return name
 
     def enter_firstname(self):
         firstname = input("First Name: ")
@@ -230,10 +220,10 @@ class MenuName():
         return name
 
     def generate_table_names(self, conn) -> None:
-        cur = conn.cursor()
         table_names = """CREATE TABLE IF NOT EXISTS names (
-                         key TEXT,
-                         initial TEXT,
+                         name_id INTEGER PRIMARY KEY,
+                         personal_id INTEGER,
+                         created_by TEXT,
                          timestamp TEXT,
                          first_name TEXT NOT NULL,
                          middle_names TEXT,
@@ -241,55 +231,69 @@ class MenuName():
                          nickname TEXT,
                          maiden_name TEXT,
                          suffix TEXT,
-                         salutation TEXT
+                         salutation TEXT,
+                         FOREIGN KEY (person_id)
+                            REFERENCES persons(person_id)
+                            ON DELETE CASCADE
                          )"""
-        cur.execute(table_names)
-        conn.commit()
-        return
-
-    def commit_name_to_db(self, initial, name, conn) -> str:
-        self.generate_table_names(conn)
-        if not self.name_already_in_db(conn, name):
-            key = self.add_name_to_db(conn, initial, name)
+        with conn:
+            cur = conn.cursor()
+            cur.execute(table_names)
             conn.commit()
-            return key
+
+    def commit_name_to_db(self, conn: sqlite3.Connection, created_by: str,
+                          name: Name) -> None:
+        if not self.name_already_in_db(conn, name):
+            self.generate_table_names(conn)
+            self.add_name_to_db(conn, created_by, name)
+            self.reset_entries()
         else:
-            message_name_exists_en = "Name already exists. Create entry anyway? y/N: "  # noqa
-            choice = input(message_name_exists_en)
+            message_name_exists = "Name already exists. Create entry anyway? y/N: "  # noqa
+            choice = input(message_name_exists)
             if choice == "y":
-                key = self.add_name_to_db(conn, initial, name)
-                conn.commit()
-                return key
+                self.add_name_to_db(conn, created_by, name)
+                self.reset_entries()
         self.show_names(conn)
+
         return
 
-    def add_name_to_db(self, conn, initial, name) -> str:
+    def add_name_to_db(self, conn: sqlite3.Connection, created_by: str,
+                       name: Name, personal_id: int) -> None:
         add_name = """INSERT INTO names (
-                      key, initial, timestamp, first_name, middle_names,
-                      last_name, nickname, maiden_name, suffix, salutation)
+                      personal_id, created_by, timestamp, first_name,
+                      middle_names, last_name, nickname, maiden_name, suffix,
+                      salutation)
                       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"""
-        new_key = mk_key(conn)
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
 
-        cur = conn.cursor()
-        cur.execute(add_name, (new_key, initial, timestamp,
-                               name.first_name, name.middle_names,
-                               name.last_name, name.nickname, name.maiden_name,
-                               name.suffix, name.salutation))
-        conn.commit()
-        return new_key
+        with conn:
+            cur = conn.cursor()
+            cur.execute(add_name, (personal_id, created_by, timestamp,
+                                   name.first_name, name.middle_names,
+                                   name.last_name, name.nickname,
+                                   name.maiden_name, name.suffix,
+                                   name.salutation))
+            conn.commit()
 
-    def name_already_in_db(self, conn, name) -> bool:
-        cur = conn.cursor()
-        res = cur.execute("SELECT first_name, last_name FROM names")
-        names = res.fetchall()
-        print(names)
+    def name_already_in_db(self, conn: sqlite3.Connection, name: Name) -> bool:
+        select_names = "SELECT first_name, middle_names, last_name FROM names"
+        with conn:
+            cur = conn.cursor()
+            res = cur.execute(select_names)
+            names = res.fetchall()
+
         for name_tuple in names:
-            fn, ln = name_tuple[0], name_tuple[1]
+            fn, mn, ln = name_tuple[0], name_tuple[1], name_tuple[2]
             if fn.lower() == name.first_name.lower():
                 if ln.lower() == name.last_name.lower():
-                    return True
-        return False
+                    double = "Entry with these first and last names already exists. Please add a middle name!"  # noqa
+                    if mn is None:
+                        print(double)
+                        self.enter_middlenames()
+                        self.generate_name_instance()
+                        return self.name_already_in_db(conn, name)
+                    else:
+                        return mn.lower() == name.middle_names.lower()
 
     def show_names(self, conn) -> None:
         cur = conn.cursor()

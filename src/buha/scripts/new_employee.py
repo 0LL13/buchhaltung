@@ -6,6 +6,7 @@ import getpass
 import hashlib
 import os
 import sqlite3
+from typing import Tuple
 from .mk_key import mk_key
 
 
@@ -19,71 +20,95 @@ name_new_employee = {
 }
 
 
-def generate_table_employees(conn) -> None:
-    cur = conn.cursor()
+def generate_table_employees(conn: sqlite3.Connection) -> None:
+    """
+    key: unique identifier
+    initial: the employee's initials
+    created_by: the initials of who created the entry
+    account: key to account (? - necessary??)
+    """
     table_employees = """CREATE TABLE IF NOT EXISTS employees (
-                         employee_id INTEGER PRIMARY KEY,
                          key TEXT,
                          employee TEXT NOT NULL,
                          initial TEXT,
-                         language TEXT,
-                         company TEXT,
-                         salt BLOB NOT NULL,
-                         password_hash BLOB NOT NULL,
                          created_by TEXT,
                          timestamp TEXT
                          )"""
-    cur.execute(table_employees)
-    conn.commit()
-    return
-
-
-def new_employee(language: str, company: str, conn: sqlite3.Connection,
-                 initial_creator: str = None) -> None:
-    generate_table_employees(conn)
-    new_employee = input(name_new_employee[language])
-
-    if not employee_in_table(conn, new_employee):
-        new_key = mk_key(conn)
-        # default password, should be changed by employee
-        password = "asd"
-        salt, password_hash = hash_password(password)
-        if initial_creator is None:
-            created_by = getpass.getuser()
-        else:
-            created_by = initial_creator
-        timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
-        print(timestamp)
-        initial_new_employee = mk_initial(conn, new_employee, 2)
-
-        add_employee = """INSERT INTO employees (
-                          key, employee, initial, language, company,
-                          salt, password_hash,
-                          created_by, timestamp)
-                          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"""
+    with conn:
         cur = conn.cursor()
-        cur.execute(add_employee, (new_key, new_employee, initial_new_employee,
-                                   language, company,
-                                   sqlite3.Binary(salt),
-                                   sqlite3.Binary(password_hash),
-                                   created_by, timestamp))
+        cur.execute(table_employees)
         conn.commit()
+
+    return None
+
+
+def new_employee(language: str,
+                 conn: sqlite3.Connection,
+                 created_by: str = None) -> None:
+
+    if created_by is None:
+        created_by = getpass.getuser()
+    new_employee = input(name_new_employee[language])
+    add_employee_to_db(conn, new_employee, language, created_by)
+
+    return None
+
+
+def add_employee_to_db(conn: sqlite3.Connection,
+                       new_employee: str,
+                       language: str,
+                       created_by: str) -> None:
+
+    add_employee = """INSERT INTO employees (
+                        key, employee, initial, created_by, timestamp)
+                        VALUES (?, ?, ?, ?, ?)"""
+
+    generate_table_employees(conn)
+    account = None
+    if not employee_in_table(conn, new_employee):
+        mk_new_entry_employee(conn, new_employee):
     else:
         print("There already is an entry with the same name.")
+        choice = input("Create anyway? y/N: ")
+        if choice == "y":
+            mk_new_entry_employee(conn, new_employee)
+        else:
+            print("Abort creation of new employee.")
+            return None
 
     if 1:
         show_employees(conn)
 
-    return
+    return None
 
 
-def hash_password(password):
+def mk_new_entry_employee(conn: sqlite3.Connection, new_employee: str) -> None:
+    new_key = mk_key(conn)
+    # default password, should be changed by employee
+    password = "asd"
+    salt, password_hash = hash_password(password)
+    timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
+    print(timestamp)
+    initial_new_employee = mk_initial(conn, new_employee, 2)
+
+    with conn:
+        cur = conn.cursor()
+        cur.execute(add_employee, (new_key, new_employee,
+                                   initial_new_employee,
+                                   created_by,
+                                   timestamp))
+        conn.commit()
+
+    return None
+
+
+def hash_password(password: str) -> Tuple[str, str]:
     salt = os.urandom(16)  # Generate a random salt
     password_hash = hashlib.pbkdf2_hmac('sha256', password.encode('utf-8'), salt, 100000)  # noqa
     return salt, password_hash
 
 
-def mk_initial(conn, name, length) -> str:
+def mk_initial(conn: sqlite3.Connection, name: list, length: int) -> str:
     fn = name.split()[0]
     ln = name.split()[1]
 
@@ -104,34 +129,37 @@ def mk_initial(conn, name, length) -> str:
     return initial
 
 
-def initial_in_table(conn, initial) -> bool:
-    cur = conn.cursor()
-    res = cur.execute("SELECT initial FROM employees")
-    initials = res.fetchall()
-    for res_initial in initials:
-        abbr = ''.join(str(c) for c in res_initial)
-        if abbr == initial:
-            return True
-    return False
+def initial_in_table(conn: sqlite3.Connection, initial: str) -> bool:
+    with conn:
+        cur = conn.cursor()
+        res = cur.execute("SELECT initial FROM employees")
+        initials = res.fetchall()
+        for res_initial in initials:
+            abbr = ''.join(str(c) for c in res_initial)
+            if abbr == initial:
+                return True
+        return False
 
 
-def employee_in_table(conn, employee) -> bool:
-    cur = conn.cursor()
-    res = cur.execute("SELECT employee FROM employees")
-    employees = res.fetchall()
-    for res_employee in employees:
-        name = " ".join(str(c) for c in res_employee)
-        if name == employee:
-            return True
-    return False
+def employee_in_table(conn: sqlite3.Connection, employee: str) -> bool:
+    with conn:
+        cur = conn.cursor()
+        res = cur.execute("SELECT employee FROM employees")
+        employees = res.fetchall()
+        for res_employee in employees:
+            name = " ".join(str(c) for c in res_employee)
+            if name == employee:
+                return True
+        return False
 
 
-def show_employees(conn) -> None:
-    cur = conn.cursor()
-    data = cur.execute("""SELECT * from employees""")
-    res = data.fetchall()
-    for res_employee in res:
-        print(res_employee)
+def show_employees(conn: sqlite3.Connection) -> None:
+    with conn:
+        cur = conn.cursor()
+        data = cur.execute("""SELECT * from employees""")
+        res = data.fetchall()
+        for res_employee in res:
+            print(res_employee)
 
 
 if __name__ == "__main__":

@@ -1,24 +1,35 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # person.py
-"""A set of dataclasses concerning persons and their particulars."""
+"""Menu to add the names and particulars of a person. Will be added to the
+company's database of the same name as company."""
 import datetime
-import re
 import sqlite3
-import sys
-from dataclasses import dataclass, field
-from typing import Optional, Tuple
+from dataclasses import dataclass
+from typing import Tuple
 from .helpers import clear_screen
-from .mk_key import mk_key
-from .name import MenuName
+from .helpers import create_headline
+from .helpers import mk_initials
+from .names import Name
+from .names import MenuName
+
+
+screen_cleared = False
+
+prompt = {
+    "de": "PERSONENEINTRAG",
+    "it": "INGRESSO DELLA PERSONA",
+    "es": "ENTRADA DE PERSONA",
+    "tr": "KIŞI GIRIŞI",
+    "fr": "ENTRÉE DE PERSONNE",
+    "en": "PERSON ENTRY",
+}
+
+languages = ["de", "en", "fr", "es", "it", "tr"]
 
 
 def pick_language() -> str:
-    pick_language_prompt = f"""
-        +{'-' * 77}+
-        | BUHA START MENU{' ' * 61}|
-        +{'-' * 77}+
-
+    pick_language_prompt = """
         Welche Sprache? de
         Which language? en
         Quelle langue? fr
@@ -26,14 +37,11 @@ def pick_language() -> str:
         Quale lingua? it
         Hangi dil? tr
 
-        Exit? x
-
         --> """
 
     language = input(pick_language_prompt)
-    if language == "x":
-        sys.exit()
-    elif language not in ["de", "en", "fr", "es", "it", "tr"]:
+    if language not in languages:
+        print(f"Should be {languages}")
         language = pick_language()
 
     return language
@@ -41,15 +49,11 @@ def pick_language() -> str:
 
 @dataclass
 class Person():
-    key: str
-    initial: str
+    created_by: str  # the initials of the person who created entry
     timestamp: str
     first_name: str
+    middle_names: str
     last_name: str
-    relation: str
-    names_key: str
-    title_key: Optional[str] = field(default=None)
-    particulars_key: Optional[str] = field(default=None)
 
 
 class MenuNewPerson():
@@ -64,36 +68,34 @@ class MenuNewPerson():
             "9": False,
         }
 
-    def display_menu(self, company_name):
-        clear_screen()
-        company_name = company_name[:-3]
-        company_name = re.sub("_", " ", company_name)
-        length_name = 76 - len(company_name)
-        prompt = "PERSON ENTRY"
-        length_prompt = 76 - len(prompt)
-        company_line = f"| {company_name}" + ' ' * length_name + "|"
-        action_prompt = "| " + prompt + ' ' * length_prompt + "|"
-        menu_person_entry = f"""
-        +{'-' * 77}+
-        {company_line}
-        +{'-' * 77}+
-        {action_prompt}
-        +{'-' * 77}+
+    def display_menu(self, company_name: str, language: str, prompt: str) -> None:  # noqa
+        global screen_cleared
 
+        menu_person_head = create_headline(company_name, language, prompt)
+        if not screen_cleared:
+            clear_screen()
+            screen_cleared = True
+            print(menu_person_head)
+
+        menu_person_entry = """
         1: Name
         2: Titles
         3: Additional personal data
         4: Show persons
         9: Back
-
         """
+
         print(menu_person_entry)
 
     def run(self, initial: str,
             conn: sqlite3.Connection,
-            company_name: str) -> Tuple[str | None, str | None]:
+            company_name: str,
+            language: str) -> Tuple[str | None, str | None]:
+        """
+        "company_name" is only needed for the display of the company's name.
+        """
         while True:
-            self.display_menu(company_name)
+            self.display_menu(company_name, language)
             choice = input("        Enter an option: ")
             if not self.choices.get(choice):
                 name, names_key = None, None
@@ -101,39 +103,31 @@ class MenuNewPerson():
             else:
                 action = self.choices.get(choice)
                 if action and choice == "4":
-                    action(initial, conn)
+                    action(conn)
                 elif action:
-                    name, names_key = action(initial, conn, company_name)
+                    name = action(initial, conn, language)
+                    # commit_to_db(name, names_key)
                 else:
                     print(f"        {choice} is not a valid choice.")
 
         return name, names_key
 
-    def enter_name(self, initial: str,
+    def enter_name(self, created_by: str,
                    conn: sqlite3.Connection,
-                   company_name: str) -> Tuple[str | None, str | None]:
-        menu = MenuName()
-        res = menu.run(initial, conn, company_name)
-        if res == (None, None):
-            print("No values for menu.run(initial)")
-            name, names_key = None, None
-        else:
-            print("res from enter_name")
-            print(res)
-            name = res[0]
-            names_key = res[1]
-            print("name: ", name)
-            print("names_key: ", names_key)
-            first_name = f"{name.first_name}"
-            last_name = f"{name.last_name}"
-            print("        Chose language for newly created person.")
-            language = pick_language()
-            if names_key is not None:
-                self.generate_table_persons(conn)
-                self.add_person_to_db(conn, initial, first_name, last_name, language, names_key)  # noqa
-                self.show_persons(initial, conn)
+                   company_name: str,
+                   language: str) -> dict:
+        # "company_name" is needed to display the company's name in MenuName
 
-        return name, names_key
+        menu = MenuName()
+        name = menu.run(created_by, conn, company_name, language)  # format dataclass "Name"  # noqa
+        if name is None:
+            print("No entries for enter_name)")
+        else:
+            print("name from enter_name: ", name)
+            self.generate_table_persons(conn)
+            person_id = self.add_person_to_db(conn, created_by, name, 2)
+            menu.commit
+        return name
 
     def enter_titles(self) -> None:
         pass
@@ -148,7 +142,7 @@ class MenuNewPerson():
             relation = self.enter_relation()
         return relation
 
-    def show_persons(self, initial, conn) -> None:
+    def show_persons(self, conn) -> None:
         cur = conn.cursor()
         res = cur.execute("SELECT * FROM persons")
         res_persons = res.fetchall()
@@ -156,41 +150,51 @@ class MenuNewPerson():
             print(person)
         return
 
-    def generate_table_persons(self, conn) -> None:
-        cur = conn.cursor()
-        table_persons = """CREATE TABLE IF NOT EXISTS persons (
-                         key TEXT,
-                         initial TEXT,
-                         timestamp TEXT,
-                         first_name TEXT,
-                         last_name TEXT,
-                         language TEXT,
-                         names_key TEXT,
-                         relation TEXT,
-                         titles_key TEXT,
-                         particulars_key TEXT
-                         )"""
-        cur.execute(table_persons)
-        conn.commit()
+    def generate_table_persons(self, conn: sqlite3.Connection) -> None:
+        """
+        "created_by" refers to the initials of the person who created this
+        entry.
+        "middle_name" is a fallback entry in case there are more than one
+        persons with the same name.
+        "initials" is the unique identifier to find related tables.
+        """
+        with conn:
+            cur = conn.cursor()
+            table_persons = """CREATE TABLE IF NOT EXISTS persons (
+                            person_id INTEGER PRIMARY KEY,
+                            created_by TEXT,
+                            timestamp TEXT,
+                            first_name TEXT NOT NULL,
+                            middle_names TEXT,
+                            last_name TEXT NOT NULL,
+                            initials TEXT NOT NULL
+                            )"""
+            cur.execute(table_persons)
+            conn.commit()
         return
 
-    def add_person_to_db(self, conn, initial, first_name, last_name, language,
-                         names_key, titles_key=None,
-                         particulars_key=None) -> None:  # noqa
-        new_key = mk_key(conn)
+    def add_person_to_db(self, conn: sqlite3.Connection,
+                         created_by: str, name: Name, length: int) -> str:
+        """
+        Adding the basic data about a person and who created it. "initials"
+        serves as the unique identifier.
+        """
+        initials = mk_initials(conn, name, length)
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
-        relation = self.enter_relation()
+        first_name = f"{name.first_name}"
+        last_name = f"{name.last_name}"
+        middle_names = f"{name.middle_names}"
+
         add_person = """INSERT INTO persons (
-                        key, initial, timestamp, first_name, last_name,
-                        language, names_key, relation, titles_key,
-                        particulars_key)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"""
-        cur = conn.cursor()
-        cur.execute(add_person, (new_key, initial, timestamp, first_name,
-                                 last_name, language, names_key, relation,
-                                 titles_key, particulars_key))
-        conn.commit()
-        return
+                        person_id, created_by, timestamp, first_name,
+                        middle_names, last_name, initials)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?)"""
+        with conn:
+            cur = conn.cursor()
+            cur.execute(add_person, (created_by, timestamp, first_name,
+                                     middle_names, last_name, initials))
+            conn.commit()
+        return initials
 
 
 if __name__ == "__main__":
