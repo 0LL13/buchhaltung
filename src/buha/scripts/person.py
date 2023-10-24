@@ -179,6 +179,7 @@ class MenuNewPerson():
         Adding the basic data about a person and who created it. "initials"
         serves as the unique identifier.
         """
+        print("name in function add_person_to_db: ", name)
         initials = mk_initials(conn, name, length)
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
         first_name = f"{name.first_name}"

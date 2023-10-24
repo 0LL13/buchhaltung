@@ -2,19 +2,19 @@
 # -*- coding: utf-8 -*-
 # main.py
 import getpass
-import os
 import re
 import sqlite3
 from typing import Tuple
 
-from src.buha.scripts.helpers import clear_screen
-from src.buha.scripts.helpers import check_database  # looking for databases
+from src.buha.scripts.helpers import check_databases  # looking for databases
 from src.buha.scripts.helpers import state_company
 from src.buha.scripts.helpers import path_to_database
 from src.buha.scripts.helpers import pick_language
 from src.buha.scripts.login import LoginMenu
 from src.buha.scripts.person import MenuNewPerson as NewPerson
 from src.buha.scripts.new_entry import MenuNewEntry
+from src.buha.scripts.shared import clear_screen
+
 
 """
 Entry point for buha. Get language first, then name of company. The name of the
@@ -46,10 +46,10 @@ def initialize() -> Tuple[sqlite3.Connection, str, str]:
         - language should be clear after login, but can be changed in settings
         - give option to not login and create new db instead
     """
-    targets = check_database()  # returns list with databases
+    targets = check_databases()  # returns list with databases
     if targets == []:   # no database found
-        language = pick_language
-        company_name = state_company  # database will be named after company
+        language = pick_language()
+        company_name = state_company(language)  # database will be named after company  # noqa
         created_by = getpass.getuser()
         conn = activate_database(company_name)
         new_person = NewPerson()
@@ -59,8 +59,9 @@ def initialize() -> Tuple[sqlite3.Connection, str, str]:
 def activate_database(company_name: str) -> sqlite3.Connection:
     path = path_to_database()
     print("activate_database, path, company_name: ", path, company_name)
-    database_path = os.path.join(os.path.dirname(__file__), path + company_name)  # noqa
-    conn = sqlite3.connect(database_path)
+    db_path = path / company_name
+    print(db_path)
+    conn = sqlite3.connect(db_path)
     return conn
 
 

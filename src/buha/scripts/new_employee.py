@@ -66,7 +66,7 @@ def add_employee_to_db(conn: sqlite3.Connection,
     generate_table_employees(conn)
     account = None
     if not employee_in_table(conn, new_employee):
-        mk_new_entry_employee(conn, new_employee):
+        mk_new_entry_employee(conn, new_employee)
     else:
         print("There already is an entry with the same name.")
         choice = input("Create anyway? y/N: ")

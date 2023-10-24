@@ -3,17 +3,16 @@
 # helpers.py
 """Helper functions: exceptions, print style, ..."""
 import os
-import platform
 import re
 import sqlite3
 import sys
 from fuzzywuzzy import fuzz
 from prettytable import PrettyTable
+from pathlib import Path
 from .attr_dicts import german_attrs
-from .names import Name
+from .shared import Name
+from .shared import clear_screen
 
-
-language = "de"
 
 action_prompt = {
     "de": "WÄHLEN SIE EINE AKTION",
@@ -68,26 +67,12 @@ def initials_in_table(conn: sqlite3.Connection, initials: str) -> bool:
         return False
 
 
-def is_posix() -> bool:
-    if platform.system() == "Windows":
-        return False
-    else:
-        return True
-
-
-def path_to_database() -> str:
-    path_to_database = {
-        "windows": "src" + "\\" + "buha" + "\\" + "data" + "\\",
-        "posix": "src" + "/" + "buha" + "/" + "data" + "/",
-    }
-
-    if is_posix():
-        path = path_to_database["posix"]
-    else:
-        path = path_to_database["windows"]
-
-    print("path_to_database: ", path)
-    return path
+def path_to_database() -> Path:
+    cwd = Path(__file__).resolve().parent
+    db_dir = cwd.parent / "data"
+    db_path = db_dir.resolve()
+    print(str(db_path))
+    return db_path
 
 
 def state_company(language: str) -> str:
@@ -97,20 +82,21 @@ def state_company(language: str) -> str:
     return company_name
 
 
-def create_headline(self, company_name: str, language: str, prompt_: str) -> str:  # noqa
+def create_headline(company_name: str, language: str,
+                    prompt: str = action_prompt) -> str:
     company_name = company_name[:-3]
     company_name = re.sub("_", " ", company_name)
     length_name = 76 - len(company_name)
-    prompt = prompt_[language]
+    prompt = action_prompt[language]
     length_prompt = 76 - len(prompt)
     company_line = f"| {company_name}" + ' ' * length_name + "|"
-    action_prompt = "| " + prompt + ' ' * length_prompt + "|"
+    final_action_prompt = "| " + prompt + ' ' * length_prompt + "|"
 
     menu_xxxxx_head = f"""
     +{'-' * 77}+
     {company_line}
     +{'-' * 77}+
-    {action_prompt}
+    {final_action_prompt}
     +{'-' * 77}+"""
 
     return menu_xxxxx_head
@@ -153,15 +139,14 @@ def check_databases() -> list:
     """
     targets = []
 
-    print("inside check_for_matches")
-    path = path_to_database()
-    database_path = os.path.join(os.path.dirname(__file__), path)
-    print("database_path: ", database_path)
-    for (dirpath, dirnames, filenames) in os.walk(database_path):
+    print("inside check_databases")
+    path_to_db = path_to_database()
+    for (dirpath, dirnames, filenames) in os.walk(path_to_db):
         for filename in filenames:
+            print(filename)
             if filename.endswith(".db"):
                 targets.append(filename)
-    print("check_for_matches, targets: ", targets)
+    print("check_databases, targets: ", targets)
 
     return targets
 
@@ -174,13 +159,6 @@ def database_exists(company_name: str) -> bool:
         return False
     print("inside database_exists: file exists")
     return True
-
-
-def clear_screen() -> None:
-    if is_posix():
-        os.system("clear")
-    else:
-        os.system("cls")
 
 
 def pick_language() -> str:
@@ -209,18 +187,6 @@ def pick_language() -> str:
         language = pick_language()
 
     return language
-
-
-class TooManyFirstNames(Exception):
-    """
-    Currently only one first name and two middle names are supported.
-    Example: Tom H. Paul last_name
-    """
-
-    def __init__(self, message):
-        """Usage: raise TooManyFirstNames ("message")."""
-
-        Exception.__init__(self, message)
 
 
 class AttrDisplay:
@@ -260,6 +226,7 @@ class AttrDisplay:
 
         see also: https://zetcode.com/python/prettytable/
         """
+        language = "de"
         if language:
             attrs = self.translate()
         else:

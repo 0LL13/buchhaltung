@@ -9,46 +9,9 @@ import re
 import sqlite3
 import sys
 from operator import itemgetter
-from dataclasses import dataclass, field
-from typing import Optional, Tuple
-from .helpers import AttrDisplay
+from typing import Tuple
 from .helpers import create_headline
-
-
-@dataclass
-class _Name_default:
-    middle_names: Optional[str] = field(default=None)
-    nickname: Optional[str] = field(default=None)
-    maiden_name: Optional[str] = field(default=None)
-    suffix: Optional[str] = field(default=None)
-    salutation: Optional[str] = field(default=None)
-
-
-@dataclass
-class _Name_base:
-    first_name: str
-    last_name: str
-
-
-@dataclass
-class Name(_Name_default, _Name_base, AttrDisplay):
-    """A person's names: first, middle/s, last name."""
-
-    def __post_init__(self):
-        """
-        Initializing the names of a person.
-
-        In case a Name instance is initialized with all first names in one
-        string, __post_init__ will take care of this and assign each first
-        name its attribute. Also it will raise TooManyFirstNames if more than
-        three first names are given.
-        """
-        print("post_init dataclass Name")
-        print(self.first_name)
-        first_names = self.first_name.split(" ")
-        self.first_name = first_names[0]
-        if len(first_names) > 1:
-            self.middle_names = " ".join(name for name in first_names[1:])
+from .shared import Name
 
 
 class MenuName():
@@ -82,7 +45,8 @@ class MenuName():
 
     def display_menu(self, company_name: str, language: str) -> None:
         prompt = "BASIC NAME PARTICULARS"
-        menu_names_head = create_headline(company_name, language, prompt)
+        print(language)
+        menu_names_head = create_headline(company_name, language, prompt=prompt)  # noqa
         print(menu_names_head)
 
         menu_names_entry = """
@@ -103,13 +67,14 @@ class MenuName():
 
     def run(self, initial: str,
             conn: sqlite3.Connection,
-            company_name: str) -> Tuple[str | None, str | None]:
+            company_name: str,
+            language: str) -> Tuple[str | None, str | None]:
 
         """Display Menu, gather entries in dict "entries", and finally put
         the data in new instance of Name."""
 
         while True:
-            self.display_menu(company_name)
+            self.display_menu(company_name, language)
             choice = input("        Enter an option: ")
             if not self.choices.get(choice):
                 break
