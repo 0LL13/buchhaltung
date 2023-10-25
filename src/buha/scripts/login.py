@@ -4,42 +4,38 @@
 import getpass
 import hashlib
 import os
-import re
 import sqlite3
 import sys
 from typing import Tuple
 from .helpers import clear_screen
+from .helpers import create_headline
 from .new_employee import generate_table_employees
+
+
+screen_cleared = False
 
 
 class LoginMenu():
     """Menu options for starting buha."""
 
-    def display_menu(self, company_name) -> None:
-        clear_screen()
-        company_name = company_name[:-3]
-        company_name = re.sub("_", " ", company_name)
-        length_name = 76 - len(company_name)
+    def display_menu(self, company_name: str, language: str) -> None:
+        global screen_cleared
         prompt = "LOGIN MENU"
-        length_prompt = 76 - len(prompt)
-        company_line = f"| {company_name}" + ' ' * length_name + "|"
-        action_prompt = "| " + prompt + ' ' * length_prompt + "|"
-        login_menu = f"""
-        +{'-' * 77}+
-        {company_line}
-        +{'-' * 77}+
-        {action_prompt}
-        +{'-' * 77}+
+        menu_login_head = create_headline(company_name, language, prompt=prompt)  # noqa
 
+        if not screen_cleared:
+            clear_screen()
+            screen_cleared = True
+            print(menu_login_head)
+
+        login_menu = """
         1: Login
         2: Quit
-
         """
 
         print(login_menu)
 
-    def run(self, conn: sqlite3.Connection,
-            language: str,
+    def run(self, conn: sqlite3.Connection, language: str,
             company_name: str) -> Tuple[bool, str]:
         """
         Display login menu: login or quit.
@@ -50,13 +46,13 @@ class LoginMenu():
         Logout closes connection and exits.
         """
         while True:
-            self.display_menu(company_name)
+            self.display_menu(company_name, language)
             choice = input("Enter an option: ")
             if choice == "1":
                 generate_table_employees(conn)
                 """
                 table employees:
-                # key
+                #
                 # employee (first name, last name)
                 # initial
                 # language
@@ -124,21 +120,18 @@ def hash_password(password, salt=None):
     return salt, password_hash
 
 
-def initial_in_table(conn: sqlite3.Connection,
-                     initial: str) -> bool:
-    try:
-        with conn:
-            cur = conn.cursor()
-            res = cur.execute("SELECT initial FROM employees")
-            initials = res.fetchall()
-            # print("initials: ", initials)
-            for res_initial in initials:
-                abbr = ''.join(str(c) for c in res_initial)
-                # print("res_initial: ", res_initial)
-                # print("abbr: ", abbr)
-                # print("initial: ", initial)
-    finally:
-        return abbr == initial
+def initial_in_table(conn: sqlite3.Connection, initial: str) -> bool:
+    with conn:
+        cur = conn.cursor()
+        res = cur.execute("SELECT initial FROM names")
+        initials = res.fetchall()
+        # print("initials: ", initials)
+        for res_initial in initials:
+            abbr = ''.join(str(c) for c in res_initial)
+            # print("res_initial: ", res_initial)
+            # print("abbr: ", abbr)
+            # print("initial: ", initial)
+    return abbr == initial
 
 
 # currently not necessary

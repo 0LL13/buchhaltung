@@ -6,15 +6,16 @@ company's database of the same name as company."""
 import datetime
 import sqlite3
 from dataclasses import dataclass
-from typing import Tuple
 from .helpers import clear_screen
 from .helpers import create_headline
 from .helpers import mk_initials
-from .names import Name
+from .helpers import show_persons
+from .shared import Name
 from .names import MenuName
 
 
 screen_cleared = False
+
 
 prompt = {
     "de": "PERSONENEINTRAG",
@@ -64,14 +65,14 @@ class MenuNewPerson():
             "1": self.enter_name,
             "2": self.enter_titles,
             "3": self.enter_particulars,
-            "4": self.show_persons,
+            "4": show_persons,
             "9": False,
         }
 
-    def display_menu(self, company_name: str, language: str, prompt: str) -> None:  # noqa
+    def display_menu(self, company_name: str, language: str) -> None:
         global screen_cleared
 
-        menu_person_head = create_headline(company_name, language, prompt)
+        menu_person_head = create_headline(company_name, language, prompt=prompt)  # noqa
         if not screen_cleared:
             clear_screen()
             screen_cleared = True
@@ -87,10 +88,8 @@ class MenuNewPerson():
 
         print(menu_person_entry)
 
-    def run(self, initial: str,
-            conn: sqlite3.Connection,
-            company_name: str,
-            language: str) -> Tuple[str | None, str | None]:
+    def run(self, conn: sqlite3.Connection, created_by: str, company_name: str,
+            language: str) -> str | None:
         """
         "company_name" is only needed for the display of the company's name.
         """
@@ -98,35 +97,33 @@ class MenuNewPerson():
             self.display_menu(company_name, language)
             choice = input("        Enter an option: ")
             if not self.choices.get(choice):
-                name, names_key = None, None
+                name = None
                 break
             else:
                 action = self.choices.get(choice)
                 if action and choice == "4":
                     action(conn)
                 elif action:
-                    name = action(initial, conn, language)
+                    name = action(conn, created_by, company_name, language)
                     # commit_to_db(name, names_key)
                 else:
                     print(f"        {choice} is not a valid choice.")
 
-        return name, names_key
+        return name
 
-    def enter_name(self, created_by: str,
-                   conn: sqlite3.Connection,
+    def enter_name(self, conn: sqlite3.Connection, created_by: str,
                    company_name: str,
-                   language: str) -> dict:
+                   language: str) -> Name:
         # "company_name" is needed to display the company's name in MenuName
 
         menu = MenuName()
-        name = menu.run(created_by, conn, company_name, language)  # format dataclass "Name"  # noqa
+        name = menu.run(conn, created_by, company_name, language)  # format dataclass "Name"  # noqa
         if name is None:
             print("No entries for enter_name)")
         else:
-            print("name from enter_name: ", name)
             self.generate_table_persons(conn)
             person_id = self.add_person_to_db(conn, created_by, name, 2)
-            menu.commit
+            menu.commit_name_to_db(conn, created_by, name, person_id)
         return name
 
     def enter_titles(self) -> None:
@@ -141,14 +138,6 @@ class MenuNewPerson():
             print("        Either intern or extern. Can be changed later.")
             relation = self.enter_relation()
         return relation
-
-    def show_persons(self, conn) -> None:
-        cur = conn.cursor()
-        res = cur.execute("SELECT * FROM persons")
-        res_persons = res.fetchall()
-        for person in res_persons:
-            print(person)
-        return
 
     def generate_table_persons(self, conn: sqlite3.Connection) -> None:
         """
@@ -179,7 +168,6 @@ class MenuNewPerson():
         Adding the basic data about a person and who created it. "initials"
         serves as the unique identifier.
         """
-        print("name in function add_person_to_db: ", name)
         initials = mk_initials(conn, name, length)
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
         first_name = f"{name.first_name}"
@@ -187,9 +175,9 @@ class MenuNewPerson():
         middle_names = f"{name.middle_names}"
 
         add_person = """INSERT INTO persons (
-                        person_id, created_by, timestamp, first_name,
+                        created_by, timestamp, first_name,
                         middle_names, last_name, initials)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?)"""
+                        VALUES (?, ?, ?, ?, ?, ?)"""
         with conn:
             cur = conn.cursor()
             cur.execute(add_person, (created_by, timestamp, first_name,

@@ -10,8 +10,12 @@ import sqlite3
 import sys
 from operator import itemgetter
 from typing import Tuple
+from .helpers import clear_screen
 from .helpers import create_headline
 from .shared import Name
+
+
+screen_cleared = False
 
 
 class MenuName():
@@ -44,10 +48,14 @@ class MenuName():
         self.entries = {key: None for key in self.entries}
 
     def display_menu(self, company_name: str, language: str) -> None:
+        global screen_cleared
         prompt = "BASIC NAME PARTICULARS"
-        print(language)
+
         menu_names_head = create_headline(company_name, language, prompt=prompt)  # noqa
-        print(menu_names_head)
+        if not screen_cleared:
+            clear_screen()
+            screen_cleared = True
+            print(menu_names_head)
 
         menu_names_entry = """
         Fields with (*) are obligatory
@@ -65,9 +73,7 @@ class MenuName():
 
         print(menu_names_entry)
 
-    def run(self, initial: str,
-            conn: sqlite3.Connection,
-            company_name: str,
+    def run(self, conn: sqlite3.Connection, created_by: str, company_name: str,
             language: str) -> Tuple[str | None, str | None]:
 
         """Display Menu, gather entries in dict "entries", and finally put
@@ -81,7 +87,7 @@ class MenuName():
             else:
                 action = self.choices.get(choice)
                 if action and choice == "8":
-                    name = action(initial, conn)
+                    name = action(created_by, conn)
                     return name
                 elif action:
                     action()
@@ -181,13 +187,14 @@ class MenuName():
         default_names_list = [mn, nn, maiden, suffix, salutation]
 
         name = Name(*name_list, *default_names_list)
-        print(name)
+        if 0:
+            print(name)
         return name
 
     def generate_table_names(self, conn) -> None:
         table_names = """CREATE TABLE IF NOT EXISTS names (
                          name_id INTEGER PRIMARY KEY,
-                         personal_id INTEGER,
+                         person_id INTEGER,
                          created_by TEXT,
                          timestamp TEXT,
                          first_name TEXT NOT NULL,
@@ -207,10 +214,10 @@ class MenuName():
             conn.commit()
 
     def commit_name_to_db(self, conn: sqlite3.Connection, created_by: str,
-                          name: Name) -> None:
+                          name: Name, person_id: int) -> None:
+        self.generate_table_names(conn)
         if not self.name_already_in_db(conn, name):
-            self.generate_table_names(conn)
-            self.add_name_to_db(conn, created_by, name)
+            self.add_name_to_db(conn, created_by, name, person_id)
             self.reset_entries()
         else:
             message_name_exists = "Name already exists. Create entry anyway? y/N: "  # noqa
@@ -218,14 +225,13 @@ class MenuName():
             if choice == "y":
                 self.add_name_to_db(conn, created_by, name)
                 self.reset_entries()
-        self.show_names(conn)
 
         return
 
     def add_name_to_db(self, conn: sqlite3.Connection, created_by: str,
-                       name: Name, personal_id: int) -> None:
+                       name: Name, person_id: int) -> None:
         add_name = """INSERT INTO names (
-                      personal_id, created_by, timestamp, first_name,
+                      person_id, created_by, timestamp, first_name,
                       middle_names, last_name, nickname, maiden_name, suffix,
                       salutation)
                       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"""
@@ -233,7 +239,7 @@ class MenuName():
 
         with conn:
             cur = conn.cursor()
-            cur.execute(add_name, (personal_id, created_by, timestamp,
+            cur.execute(add_name, (person_id, created_by, timestamp,
                                    name.first_name, name.middle_names,
                                    name.last_name, name.nickname,
                                    name.maiden_name, name.suffix,
@@ -259,13 +265,6 @@ class MenuName():
                         return self.name_already_in_db(conn, name)
                     else:
                         return mn.lower() == name.middle_names.lower()
-
-    def show_names(self, conn) -> None:
-        cur = conn.cursor()
-        data = cur.execute("""SELECT * from names""")
-        res = data.fetchall()
-        for res_name in res:
-            print(res_name)
 
 
 def main():

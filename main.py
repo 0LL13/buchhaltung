@@ -2,17 +2,20 @@
 # -*- coding: utf-8 -*-
 # main.py
 import getpass
-import re
 import sqlite3
 from typing import Tuple
 
 from src.buha.scripts.helpers import check_databases  # looking for databases
 from src.buha.scripts.helpers import state_company
 from src.buha.scripts.helpers import path_to_database
+from src.buha.scripts.helpers import create_headline
 from src.buha.scripts.helpers import pick_language
+from src.buha.scripts.helpers import continue_
+from src.buha.scripts.helpers import show_names
+from src.buha.scripts.helpers import show_persons
 from src.buha.scripts.login import LoginMenu
-from src.buha.scripts.person import MenuNewPerson as NewPerson
 from src.buha.scripts.new_entry import MenuNewEntry
+from src.buha.scripts.person import MenuNewPerson as NewPerson
 from src.buha.scripts.shared import clear_screen
 
 
@@ -23,6 +26,9 @@ a new database will be created and a first employee can register. Once a
 database is installed employees log in with initials and password after they
 picked their language and company.
 """
+
+
+screen_cleared = False
 
 
 first_employee_pls_log_in = {
@@ -41,6 +47,7 @@ def initialize() -> Tuple[sqlite3.Connection, str, str]:
     - if not exists:
         - start new db
         - create first employee
+        - create settings (initials, password, language) for first employee
     - if exists:
         - login
         - language should be clear after login, but can be changed in settings
@@ -48,19 +55,33 @@ def initialize() -> Tuple[sqlite3.Connection, str, str]:
     """
     targets = check_databases()  # returns list with databases
     if targets == []:   # no database found
-        language = pick_language()
-        company_name = state_company(language)  # database will be named after company  # noqa
-        created_by = getpass.getuser()
-        conn = activate_database(company_name)
-        new_person = NewPerson()
-        new_person.enter_name(created_by, conn, company_name, language)
+        conn, language, company_name = setup_new_db()
+        return conn, language, company_name
+
+
+def setup_new_db() -> Tuple[sqlite3.Connection, str, str]:
+    language = pick_language()
+    company_name = state_company(language)  # database will be named after company  # noqa
+    created_by = getpass.getuser()
+    conn = activate_database(company_name)
+    new_person = NewPerson()
+    new_person.enter_name(conn, created_by, company_name, language)
+    if 1:
+        print("show_persons")
+        show_persons(conn)
+        print("show_names")
+        show_names(conn)
+        if continue_():
+            pass
+    return conn, language, company_name
 
 
 def activate_database(company_name: str) -> sqlite3.Connection:
     path = path_to_database()
-    print("activate_database, path, company_name: ", path, company_name)
     db_path = path / company_name
-    print(db_path)
+    if 0:
+        print("activate_database, path, company_name: ", path, company_name)
+        print(db_path)
     conn = sqlite3.connect(db_path)
     return conn
 
@@ -82,21 +103,17 @@ class StartMenu():
         }
 
     def display_menu(self, company_name: str, language: str) -> None:
-        clear_screen()
-        company_name = company_name[:-3]
-        company_name = re.sub("_", " ", company_name)
-        length_name = 76 - len(company_name)
+        global screen_cleared
         prompt = "CHOSE ACTION"
-        length_prompt = 76 - len(prompt)
-        company_line = f"| {company_name}" + ' ' * length_name + "|"
-        action_prompt = "| " + prompt + ' ' * length_prompt + "|"
-        menu_first_action = f"""
-        +{'-' * 77}+
-        {company_line}
-        +{'-' * 77}+
-        {action_prompt}
-        +{'-' * 77}+
+        menu_main_head = create_headline(company_name, language,
+                                         screen_cleared, prompt=prompt)
 
+        if not screen_cleared:
+            clear_screen()
+            screen_cleared = True
+            print(menu_main_head)
+
+        menu_first_action = """
         1: New Entry
         2: Change Entry
         3: Search Entry

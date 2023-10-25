@@ -27,6 +27,8 @@ def clear_screen() -> None:
         os.system("cls")
 
 
+# ############## class definitions ############################################
+
 class AttrDisplay:
     """
     Mark Lutz, Programming Python
@@ -68,7 +70,7 @@ class AttrDisplay:
             attrs = self.translate()
         else:
             attrs = self.gather_attrs()
-        print(f"{self.__class__.__name__}")
+        # print(f"{self.__class__.__name__}")
         t = PrettyTable(["attribute", "value"])
         t.align["attribute"] = "l"
         t.align["value"] = "l"
@@ -108,20 +110,20 @@ class _Name_base:
 
 @dataclass
 class Name(_Name_default, _Name_base, AttrDisplay):
-    """A person's names: first, middle/s, last name."""
+    pass
 
-    def __post_init__(self):
-        """
-        Initializing the names of a person.
-
-        In case a Name instance is initialized with all first names in one
-        string, __post_init__ will take care of this and assign each first
-        name its attribute. Also it will raise TooManyFirstNames if more than
-        three first names are given.
-        """
-        print("post_init dataclass Name")
-        print(self.first_name)
-        first_names = self.first_name.split(" ")
-        self.first_name = first_names[0]
-        if len(first_names) > 1:
-            self.middle_names = " ".join(name for name in first_names[1:])
+#     def __post_init__(self):
+#         """
+#         Initializing the names of a person.
+#
+#         In case a Name instance is initialized with all first names in one
+#         string, __post_init__ will take care of this and assign each first
+#         name its attribute. Also it will raise TooManyFirstNames if more than
+#         three first names are given.
+#         """
+#         print("post_init dataclass Name")
+#         print(self.first_name)
+#         first_names = self.first_name.split(" ")
+#         self.first_name = first_names[0]
+#         if len(first_names) > 1:
+#             self.middle_names = " ".join(name for name in first_names[1:])

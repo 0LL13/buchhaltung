@@ -18,10 +18,15 @@ def generate_table_settings(conn: sqlite3.Connection) -> None:
     back at the owner of the settings.
     """
     table_settings = """CREATE TABLE IF NOT EXISTS settings (
-                        key TEXT,
+                        settings_id INTEGER PRIMARY KEY,
+                        person_id INTEGER
                         language TEXT,
+                        initials TEXT,
                         salt BLOB NOT NULL,
                         password_hash BLOB NOT NULL
+                        FOREIGN KEY (person_id)
+                            REFERENCES persons(person_id)
+                            ON DELETE CASCADE
                         )"""
     with conn:
         cur = conn.cursor()
@@ -30,33 +35,35 @@ def generate_table_settings(conn: sqlite3.Connection) -> None:
         return
 
 
-def update_language(conn: sqlite3.Connection, language: str, key: str) -> None:
+def update_language(conn: sqlite3.Connection, language: str,
+                    person_id: int) -> None:
 
     generate_table_settings(conn)
     update_language = f"""UPDATE settings
                           SET language = {language},
-                          WHERE key = {key}"""
+                          WHERE person_id = {person_id}"""
 
     with conn:
         cur = conn.cursor()
-        cur.execute(update_language, (key, language))
+        cur.execute(update_language, (language, person_id))
         conn.commit()
 
     return
 
 
-def update_password(conn: sqlite3.Connection, password: str, key: str) -> None:
+def update_password(conn: sqlite3.Connection, password: str,
+                    person_id: int) -> None:
 
     generate_table_settings(conn)
     salt, password_hash = hash_password(password)
     update_password = f"""UPDATE settings
                           SET salt = {salt},
                           password_hash = {password_hash}
-                          WHERE key = {key}"""
+                          WHERE person_id = {person_id}"""
 
     with conn:
         cur = conn.cursor()
-        cur.execute(update_password, (key,
+        cur.execute(update_password, (person_id,
                                       sqlite3.Binary(salt),
                                       sqlite3.Binary(password_hash)
                                       ))
