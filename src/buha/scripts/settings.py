@@ -1,15 +1,19 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # settings.py
+import datetime
 import hashlib
 import os
-import re
 import sqlite3
 from typing import Tuple
 from .helpers import action_prompt
 from .helpers import clear_screen
+from .helpers import create_headline
 from .login import password_correct
 from .person import pick_language
+
+
+screen_cleared = False
 
 
 def generate_table_settings(conn: sqlite3.Connection) -> None:
@@ -19,11 +23,13 @@ def generate_table_settings(conn: sqlite3.Connection) -> None:
     """
     table_settings = """CREATE TABLE IF NOT EXISTS settings (
                         settings_id INTEGER PRIMARY KEY,
-                        person_id INTEGER
+                        person_id INTEGER,
+                        created_by TEXT,
+                        timestamp TEXT,
                         language TEXT,
                         initials TEXT,
                         salt BLOB NOT NULL,
-                        password_hash BLOB NOT NULL
+                        password_hash BLOB NOT NULL,
                         FOREIGN KEY (person_id)
                             REFERENCES persons(person_id)
                             ON DELETE CASCADE
@@ -33,6 +39,24 @@ def generate_table_settings(conn: sqlite3.Connection) -> None:
         cur.execute(table_settings)
         conn.commit()
         return
+
+
+def add_settings(conn: sqlite3.Connection, created_by: str, language: str,
+                 person_id: int, initials: str) -> None:
+    add_settings = """INSERT INTO settings (
+                      person_id, created_by, timestamp, language, initials,
+                      salt, password_hash)
+                      VALUES (?, ?, ?, ?, ?, ?, ?)"""
+    timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
+    password = "asd"
+    salt, password_hash = hash_password(password)
+
+    with conn:
+        generate_table_settings(conn)
+        cur = conn.cursor()
+        cur.execute(add_settings, (person_id, created_by, timestamp, language,
+                                   initials, salt, password_hash))
+        conn.commit()
 
 
 def update_language(conn: sqlite3.Connection, language: str,
@@ -47,8 +71,7 @@ def update_language(conn: sqlite3.Connection, language: str,
         cur = conn.cursor()
         cur.execute(update_language, (language, person_id))
         conn.commit()
-
-    return
+        return
 
 
 def update_password(conn: sqlite3.Connection, password: str,
@@ -68,8 +91,7 @@ def update_password(conn: sqlite3.Connection, password: str,
                                       sqlite3.Binary(password_hash)
                                       ))
         conn.commit()
-
-    return
+        return
 
 
 def hash_password(password: str) -> Tuple[str, str]:
@@ -90,22 +112,16 @@ class MenuSettings():
         }
 
     def display_menu(self, company_name: str, language: str) -> None:
-        clear_screen()
-        company_name = company_name[:-3]
-        company_name = re.sub("_", " ", company_name)
-        length_name = 76 - len(company_name)
+        global screen_cleared
         prompt = action_prompt[language]
-        length_prompt = 76 - len(prompt)
-        company_line = f"| {company_name}" + ' ' * length_name + "|"
-        chose_action = "| " + prompt + ' ' * length_prompt + "|"
 
-        menu_change_settings = f"""
-        +{'-' * 77}+
-        {company_line}
-        +{'-' * 77}+
-        {chose_action}
-        +{'-' * 77}+
+        menu_settings_head = create_headline(company_name, language, prompt=prompt)  # noqa
+        if not screen_cleared:
+            clear_screen()
+            screen_cleared = True
+            print(menu_settings_head)
 
+        menu_change_settings = """
         1: Change language
         2: Change password
         9: Back

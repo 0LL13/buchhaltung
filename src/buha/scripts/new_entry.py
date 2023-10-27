@@ -58,12 +58,10 @@ class MenuNewEntry():
 
         print(menu_type_of_new_entry)
 
-    def run(self, initial: str,
-            conn: sqlite3.Connection,
-            company_name: str,
-            language: str) -> None:
-        '''Display menu and respond to choices'''
+    def run(self, conn: sqlite3.Connection, created_by: str,
+            company_name: str, language: str) -> None:
 
+        # "created_by" are the initials of the person working with the program
         while True:
             self.display_menu(company_name, language)
             choice = input("        Enter an option: ")
@@ -74,30 +72,28 @@ class MenuNewEntry():
                 action = self.choices.get(choice)
                 print("action iin new_entry: ", action)
                 if action:
-                    action(initial, conn, company_name, language)
+                    action(conn, created_by, company_name, language)
             else:
                 print(f"{choice} is not a valid choice.")
 
-    def new_person(self, initial: str,
-                   conn: sqlite3.Connection,
-                   company_name: str,
-                   language: str) -> None:
+    def new_person(self, conn: sqlite3.Connection, created_by: str,
+                   company_name: str, language: str) -> None:
 
         menu = MenuNewPerson()
-        menu.run(initial, conn, company_name, language)
+        menu.run(conn, created_by, company_name, language)
 
-    def new_entity(self, initial) -> None:
-        print(f"change entity by {initial}")
+    def new_entity(self, conn, initials) -> None:
+        print(f"change entity by {initials}")
 
-    def new_object(self, initial) -> None:
+    def new_object(self, conn, initials) -> None:
         # object: name, type (ware, product, material, tool, ...), supplier,
         # supplier_alternatives, key, bank details
-        print(f"search object by {initial}")
+        print(f"search object by {initials}")
 
-    def new_project(self, initial) -> None:
-        print(f"search project by {initial}")
+    def new_project(self, conn, initials) -> None:
+        print(f"search project by {initials}")
 
-    def new_service(self, initial) -> None:
+    def new_service(self, conn, initial) -> None:
         print(f"search service by {initial}")
 
 

@@ -108,33 +108,24 @@ def state_company(language: str) -> str:
 
 # type hint best practice for v3.10 or above
 # https://stackoverflow.com/a/69440627/6597765
-def check_for_matches(company_name: str, language: str) -> str | None:
+def check_for_matches(company_name: str, targets: list, language: str) -> str:
     """
     Check if a name resembles that of the names found in the database folder.
+    "targets" will be a non-empty list bc it's in an if-else condition.
     """
 
-    targets = check_databases()
-    if targets == []:
-        return None
-    threshold = 50
+    threshold = 80
     scores = [fuzz.ratio(target, company_name) for target in targets]
-    if scores:
-        best_match_index = scores.index(max(scores))
-        best_match = targets[best_match_index]
+    best_match_index = scores.index(max(scores))
+    best_match = targets[best_match_index]
 
-        if max(scores) > threshold:
-            choice = input(f"Did you mean {best_match}? y/N: ")
-            if choice == "y":
-                print("best_match: ", best_match)
-                return best_match
-
-    repeat = input("Check again? y/N ")
-    if repeat == "y":
-        company_name = state_company(language)
-        return check_for_matches(company_name, language)
-
-    match = None
-    return match
+    if max(scores) > threshold:
+        return best_match
+    elif max(scores) > 50:
+        choice = input(f"Did you mean {best_match}? y/N: ")
+        if choice == "y":
+            print("best_match: ", best_match)
+            return best_match
 
 
 def check_databases() -> list:
@@ -202,17 +193,20 @@ def continue_() -> bool:
 
 # ############## show tables ##################################################
 
-def show_names(conn: sqlite3.Connection) -> None:
-    cur = conn.cursor()
-    data = cur.execute("""SELECT * from names""")
-    res = data.fetchall()
-    for res_name in res:
-        print(res_name)
+def show_table(conn: sqlite3.Connection, table) -> None:
+    with conn:
+        cur = conn.cursor()
+        res = cur.execute(f"SELECT * FROM {table}")
+        res_table = res.fetchall()
+        for row in res_table:
+            print(row)
 
 
-def show_persons(conn: sqlite3.Connection) -> None:
-    cur = conn.cursor()
-    res = cur.execute("SELECT * FROM persons")
-    res_persons = res.fetchall()
-    for person in res_persons:
-        print(person)
+def show_all(conn: sqlite3.Connection, person_id) -> None:
+    tables = ["persons", "names", "settings"]
+    with conn:
+        cur = conn.cursor()
+        for table in tables:
+            cur.execute(f"SELECT * FROM {table} WHERE person_id = ?", (person_id))  # noqa
+            res = cur.fetchone[0]
+            print(res)

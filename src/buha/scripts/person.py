@@ -6,10 +6,11 @@ company's database of the same name as company."""
 import datetime
 import sqlite3
 from dataclasses import dataclass
+from typing import Tuple
 from .helpers import clear_screen
 from .helpers import create_headline
 from .helpers import mk_initials
-from .helpers import show_persons
+from .helpers import show_table
 from .shared import Name
 from .names import MenuName
 
@@ -65,7 +66,7 @@ class MenuNewPerson():
             "1": self.enter_name,
             "2": self.enter_titles,
             "3": self.enter_particulars,
-            "4": show_persons,
+            "4": show_table,
             "9": False,
         }
 
@@ -102,7 +103,7 @@ class MenuNewPerson():
             else:
                 action = self.choices.get(choice)
                 if action and choice == "4":
-                    action(conn)
+                    action(conn, "persons")
                 elif action:
                     name = action(conn, created_by, company_name, language)
                     # commit_to_db(name, names_key)
@@ -112,19 +113,19 @@ class MenuNewPerson():
         return name
 
     def enter_name(self, conn: sqlite3.Connection, created_by: str,
-                   company_name: str,
-                   language: str) -> Name:
-        # "company_name" is needed to display the company's name in MenuName
+                   company_name: str, language: str) -> Tuple[Name | None, int | None]:  # noqa
 
+        # "company_name" is needed to display the company's name in MenuName
         menu = MenuName()
         name = menu.run(conn, created_by, company_name, language)  # format dataclass "Name"  # noqa
         if name is None:
             print("No entries for enter_name)")
+            return None, None
         else:
             self.generate_table_persons(conn)
             person_id = self.add_person_to_db(conn, created_by, name, 2)
             menu.commit_name_to_db(conn, created_by, name, person_id)
-        return name
+            return name, person_id
 
     def enter_titles(self) -> None:
         pass
@@ -140,27 +141,19 @@ class MenuNewPerson():
         return relation
 
     def generate_table_persons(self, conn: sqlite3.Connection) -> None:
-        """
-        "created_by" refers to the initials of the person who created this
-        entry.
-        "middle_name" is a fallback entry in case there are more than one
-        persons with the same name.
-        "initials" is the unique identifier to find related tables.
-        """
+        table_persons = """CREATE TABLE IF NOT EXISTS persons (
+                        person_id INTEGER PRIMARY KEY,
+                        created_by TEXT,
+                        timestamp TEXT,
+                        first_name TEXT NOT NULL,
+                        middle_names TEXT,
+                        last_name TEXT NOT NULL,
+                        initials TEXT NOT NULL
+                        )"""
         with conn:
             cur = conn.cursor()
-            table_persons = """CREATE TABLE IF NOT EXISTS persons (
-                            person_id INTEGER PRIMARY KEY,
-                            created_by TEXT,
-                            timestamp TEXT,
-                            first_name TEXT NOT NULL,
-                            middle_names TEXT,
-                            last_name TEXT NOT NULL,
-                            initials TEXT NOT NULL
-                            )"""
             cur.execute(table_persons)
             conn.commit()
-        return
 
     def add_person_to_db(self, conn: sqlite3.Connection,
                          created_by: str, name: Name, length: int) -> str:

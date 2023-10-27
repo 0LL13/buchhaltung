@@ -81,26 +81,26 @@ def login_employee(conn: sqlite3.Connection,
                    company_name: str) -> Tuple[bool, str]:
     """Returns authenticated, initial."""
 
-    initial = input("Enter initials: ")
-    initial_validated = initial_in_table(conn, initial)
-    if initial_validated:
+    initials = input("Enter initials: ")
+    initials_validated = initials_in_table(conn, initials)
+    if initials_validated:
         password = getpass.getpass("Enter password: ")
-        password_validated = password_correct(conn, initial, password)
+        password_validated = password_correct(conn, initials, password)
         if password_validated:
-            return True, initial
+            return True, initials
     else:
         print("Unknown initials.")
 
     return False, None
 
 
-def get_language(conn: sqlite3.Connection, initial: str) -> str | None:
+def get_language(conn: sqlite3.Connection, initials: str) -> str | None:
     language = None
     try:
         with conn:
             cur = conn.cursor()
-            get_language = "SELECT language FROM employees WHERE INITIAL = ?"
-            cur.execute(get_language, (initial,))
+            get_language = "SELECT language FROM employees WHERE initials = ?"
+            cur.execute(get_language, (initials,))
             language_tuple = cur.fetchone()
             if language_tuple:
                 language = language_tuple[0]
@@ -120,18 +120,18 @@ def hash_password(password, salt=None):
     return salt, password_hash
 
 
-def initial_in_table(conn: sqlite3.Connection, initial: str) -> bool:
+def initials_in_table(conn: sqlite3.Connection, initials: str) -> bool:
     with conn:
         cur = conn.cursor()
-        res = cur.execute("SELECT initial FROM names")
-        initials = res.fetchall()
-        # print("initials: ", initials)
-        for res_initial in initials:
-            abbr = ''.join(str(c) for c in res_initial)
+        res = cur.execute("SELECT initials FROM persons")
+        res_initials = res.fetchall()
+        print("initials: ", initials)
+        for res in res_initials:
+            abbr = ''.join(str(c) for c in res)
             # print("res_initial: ", res_initial)
-            # print("abbr: ", abbr)
-            # print("initial: ", initial)
-    return abbr == initial
+            print("abbr: ", abbr)
+            print("initial: ", initials)
+    return abbr == initials
 
 
 # currently not necessary
@@ -146,37 +146,33 @@ def is_intern(conn: sqlite3.Connection,
 
 
 def password_correct(conn: sqlite3.Connection,
-                     initial: str,
+                     initials: str,
                      password: str) -> bool:
-    correct = False
 
-    try:
-        with conn:
-            cur = conn.cursor()
+    with conn:
+        cur = conn.cursor()
 
-            # Retrieve salt from database
-            get_salt = "SELECT salt FROM employees WHERE INITIAL = ?"
-            cur.execute(get_salt, (initial,))
-            salt_tuple = cur.fetchone()
-            if salt_tuple:
-                salt = salt_tuple[0]
-            else:
-                print("No salt_tuple")
-                return
+        # Retrieve salt from database
+        get_salt = "SELECT salt FROM settings WHERE initials = ?"
+        cur.execute(get_salt, (initials,))
+        salt_tuple = cur.fetchone()
+        if salt_tuple:
+            salt = salt_tuple[0]
+        else:
+            print("No salt_tuple")
+            return False
 
-            # Retrieve hashed password from database
-            get_pw = "SELECT password_hash FROM employees WHERE INITIAL = ?"  # noqa
-            cur.execute(get_pw, (initial,))
-            hashed_pw_tuple = cur.fetchone()
+        # Retrieve hashed password from database
+        get_pw = "SELECT password_hash FROM settings WHERE initials = ?"
+        cur.execute(get_pw, (initials,))
+        hashed_pw_tuple = cur.fetchone()
 
-            if hashed_pw_tuple:
-                password_hash = hashed_pw_tuple[0]
-            else:
-                print("No password_hash")
-                return
+        if hashed_pw_tuple:
+            password_hash = hashed_pw_tuple[0]
+        else:
+            print("No password_hash")
+            return False
 
-            _, computed_password_hash = hash_password(password, salt)
+        _, computed_password_hash = hash_password(password, salt)
 
-            correct = computed_password_hash == password_hash
-    finally:
-        return correct
+        return computed_password_hash == password_hash

@@ -101,13 +101,13 @@ class MenuName():
         name = self.generate_name_instance()
         return name
 
-    def enter_firstname(self):
+    def enter_firstname(self) -> None:
         firstname = input("First Name: ")
         if not firstname.isalpha():
             firstname = self.enter_firstname()
         self.entries["fn"] = firstname
 
-    def enter_middlenames(self):
+    def enter_middlenames(self) -> None:
         middlename = input("Middle Name(s): ")
         middlename = re.sub(" +", " ", middlename)
         if " " in middlename:
@@ -124,13 +124,13 @@ class MenuName():
             middlename = self.enter_middlename()
         self.entries["mn"] = middlename
 
-    def enter_lastname(self):
+    def enter_lastname(self) -> None:
         lastname = input("Last Name: ")
         if not lastname.isalpha():
             lastname = self.enter_lastname()
         self.entries["ln"] = lastname
 
-    def enter_nickname(self):
+    def enter_nickname(self) -> None:
         nickname = input("Nickname: ")
         if not nickname.isalnum():
             choice = input("Try again? y/N: ")
@@ -140,7 +140,7 @@ class MenuName():
                 nickname = None
         self.entries["nn"] = nickname
 
-    def enter_maidenname(self):
+    def enter_maidenname(self) -> None:
         maidenname = input("Maiden Name: ")
         maidenname = re.sub(" +", " ", maidenname)
         if " " in maidenname:
@@ -154,7 +154,7 @@ class MenuName():
 
         self.entries["maiden"] = maidenname
 
-    def enter_generational_suffix(self):
+    def enter_generational_suffix(self) -> None:
         suffix = input("Generational Suffix: ")
         if suffix not in ["Jr.", "Sr.", "Jr", "Sr", "Jnr", "Snr", "I", "II", "III"]:  # noqa
             choice = input("Try again? y/N: ")
@@ -164,7 +164,7 @@ class MenuName():
                 suffix = None
         self.entries["suffix"] = suffix
 
-    def enter_salutation(self):
+    def enter_salutation(self) -> None:
         salutation = input("Salutation: ")
         if salutation not in ["Herr", "Frau", "Fr.", "Hr."]:
             choice = input("Try again? y/N: ")
@@ -174,12 +174,10 @@ class MenuName():
                 salutation = None
         self.entries["salutation"] = salutation
 
-    def get_entries(self):
-        return self.entries
-
-    def generate_name_instance(self) -> None:
+    def generate_name_instance(self) -> Tuple:
         collected_entries = self.entries
-        # see here: https://stackoverflow.com/a/17755259/6597765
+        # see here about use of itemgetter:
+        # https://stackoverflow.com/a/17755259/6597765
         first_name, last_name = itemgetter("fn", "ln")(collected_entries)
         name_list = [first_name, last_name]
         mn, nn, maiden, suffix, salutation = \
@@ -191,7 +189,7 @@ class MenuName():
             print(name)
         return name
 
-    def generate_table_names(self, conn) -> None:
+    def generate_table_names(self, conn: sqlite3.Connection) -> None:
         table_names = """CREATE TABLE IF NOT EXISTS names (
                          name_id INTEGER PRIMARY KEY,
                          person_id INTEGER,
