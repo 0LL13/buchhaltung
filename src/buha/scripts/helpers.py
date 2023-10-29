@@ -191,9 +191,18 @@ def continue_() -> bool:
     return check == "y"
 
 
+def get_person_id(conn: sqlite3.Connection, initials: str) -> int:
+    with conn:
+        cur = conn.cursor()
+        cur.execute("SELECT person_id FROM persons WHERE initials = ?", (initials,))  # noqa
+        row = cur.fetchone()
+        person_id = row[0]
+        return person_id
+
+
 # ############## show tables ##################################################
 
-def show_table(conn: sqlite3.Connection, table) -> None:
+def show_table(conn: sqlite3.Connection, table: str) -> None:
     with conn:
         cur = conn.cursor()
         res = cur.execute(f"SELECT * FROM {table}")
@@ -202,11 +211,29 @@ def show_table(conn: sqlite3.Connection, table) -> None:
             print(row)
 
 
-def show_all(conn: sqlite3.Connection, person_id) -> None:
+def show_all(conn: sqlite3.Connection, person_id: int) -> None:
     tables = ["persons", "names", "settings"]
     with conn:
         cur = conn.cursor()
         for table in tables:
-            cur.execute(f"SELECT * FROM {table} WHERE person_id = ?", (person_id))  # noqa
-            res = cur.fetchone[0]
-            print(res)
+            query = f"SELECT * FROM {table} WHERE person_id = ?"
+            cur.execute(query, (person_id,))
+            res = cur.fetchone()
+            print(res[0])
+
+
+def show_my_table(conn: sqlite3.Connection, table: str, person_id: int) -> None:  # noqa
+    print("table: ", table, type(table))
+    print("person_id: ", person_id, type(person_id))
+    print("conn: ", conn)
+    with conn:
+        cur = conn.cursor()
+        query = f"SELECT * FROM {table} WHERE person_id = ?"
+        cur.execute(query, (person_id,))
+        res = cur.fetchall()
+        print("res: ", res)
+        if res:
+            res_value = res[0]
+            print(res_value)
+        else:
+            print("none")

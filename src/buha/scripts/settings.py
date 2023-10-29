@@ -9,6 +9,9 @@ from typing import Tuple
 from .helpers import action_prompt
 from .helpers import clear_screen
 from .helpers import create_headline
+from .helpers import get_person_id
+from .helpers import show_my_table
+from .helpers import continue_
 from .login import password_correct
 from .person import pick_language
 
@@ -50,6 +53,9 @@ def add_settings(conn: sqlite3.Connection, created_by: str, language: str,
     timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
     password = "asd"
     salt, password_hash = hash_password(password)
+    print("person_id: ", person_id)
+    if continue_():
+        pass
 
     with conn:
         generate_table_settings(conn)
@@ -63,9 +69,9 @@ def update_language(conn: sqlite3.Connection, language: str,
                     person_id: int) -> None:
 
     generate_table_settings(conn)
-    update_language = f"""UPDATE settings
-                          SET language = {language},
-                          WHERE person_id = {person_id}"""
+    update_language = """UPDATE settings
+                          SET language = ?
+                          WHERE person_id = ?"""
 
     with conn:
         cur = conn.cursor()
@@ -74,15 +80,15 @@ def update_language(conn: sqlite3.Connection, language: str,
         return
 
 
-def update_password(conn: sqlite3.Connection, password: str,
-                    person_id: int) -> None:
+def update_password(conn: sqlite3.Connection, password: str, initials: str) -> None:  # noqa
 
+    person_id = get_person_id(conn, initials)
     generate_table_settings(conn)
     salt, password_hash = hash_password(password)
-    update_password = f"""UPDATE settings
-                          SET salt = {salt},
-                          password_hash = {password_hash}
-                          WHERE person_id = {person_id}"""
+    update_password = """UPDATE settings
+                          SET salt = ?,
+                          password_hash = ?
+                          WHERE person_id = ?"""
 
     with conn:
         cur = conn.cursor()
@@ -108,6 +114,7 @@ class MenuSettings():
         self.choices = {
             "1": self.change_language,
             "2": self.change_password,
+            "3": show_my_table,
             "9": False
         }
 
@@ -124,55 +131,52 @@ class MenuSettings():
         menu_change_settings = """
         1: Change language
         2: Change password
+        3: Show my settings
         9: Back
         """
 
         print(menu_change_settings)
 
-    def run(self, conn: sqlite3.Connection,
-            company_name: str,
-            language_old: str,
-            password_old: str,
-            key: str) -> None:
-        '''Display menu and respond to choices'''
+    def run(self, conn: sqlite3.Connection, initials: str,
+            company_name: str, language: str) -> None:
 
         while True:
-            self.display_menu(company_name, language_old)
+            self.display_menu(company_name, language)
             choice = input("        Enter an option: ")
 
             if not self.choices.get(choice):
                 break
             elif choice == "1":
-                language = self.change_language(conn)
-                update_language(conn, language, key)
+                self.change_language(conn, initials)
 
             elif choice == "2":
-                password = self.change_password(conn, language, password_old, key)  # noqa
-                update_password(conn, password, key)
+                password = self.change_password(conn, initials, language)
+                update_password(conn, password, initials)
+            elif choice == "3":
+                person_id = get_person_id(conn, initials)
+                show_my_table(conn, "settings", person_id)
             else:
                 print(f"{choice} is not a valid choice.")
 
         return None
 
-    def change_language(self, conn: sqlite3.Connection) -> str:
-
+    def change_language(self, conn: sqlite3.Connection, initials: str) -> None:
+        person_id = get_person_id(conn, initials)
         language = pick_language()
-        return language
+        update_language(conn, language, person_id)
 
-    def change_password(self, conn: sqlite3.Connection, language: str,
-                        password_old: str, initial: str,
-                        counter: int = 1) -> str | None:
+    def change_password(self, conn: sqlite3.Connection, initials: str,
+                        language: str, counter: int = 1) -> str | None:
 
         password = input("Enter old password: ")
-        if password_correct(conn, initial, password):
+        if password_correct(conn, initials, password):
             new_password = input("Enter new password: ")
             return new_password
         else:
             counter = counter + 1
-            if counter >= 3:
+            if counter <= 3:
                 print(f"Password not correct. Try again ({counter} of 3): ")
-                return self.change_password(conn, language, password_old,
-                                            initial, counter)
+                return self.change_password(conn, initials, language, counter)
             else:
                 print("Password not correct. Too many tries.")
                 return None

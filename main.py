@@ -18,6 +18,7 @@ from src.buha.scripts.login import LoginMenu
 from src.buha.scripts.new_entry import MenuNewEntry
 from src.buha.scripts.person import MenuNewPerson as NewPerson
 from src.buha.scripts.settings import add_settings
+from src.buha.scripts.settings import MenuSettings
 from src.buha.scripts.shared import clear_screen
 
 
@@ -31,16 +32,6 @@ picked their language and company.
 
 
 screen_cleared = False
-
-
-first_employee_pls_log_in = {
-    "fr": "        Premier employé créé. Veuillez vous connecter.",
-    "en": "        First employee created. Please log in.",
-    "de": "        Erster Mitarbeiter angelegt. Bitte loggen Sie sich ein.",
-    "es": "        Primer empleado creado. Por favor Iniciar sesión.",
-    "it": "        Primo dipendente creato. Accedere prego.",
-    "tr": "        İlk çalışan oluşturuldu. Lütfen giriş yapın.",
-}
 
 
 def initialize() -> Tuple[sqlite3.Connection, str, str]:
@@ -75,6 +66,10 @@ def setup_new_db() -> Tuple[sqlite3.Connection, str, str]:
     new_person = NewPerson()
     name, person_id = new_person.enter_name(conn, created_by, company_name, language)  # noqa
     initials = mk_initials(conn, name, 2)
+    print("created_by: ", created_by)
+    print("person_id: ", person_id)
+    if continue_():
+        pass
     add_settings(conn, created_by, language, person_id, initials)
 
     if 1:
@@ -175,8 +170,10 @@ class StartMenu():
     def search_entry(self, initial: str) -> None:
         print(f"search entry by {initial}")
 
-    def settings(self, initial: str) -> None:
-        print(f"change settings (password, language) by {initial}")
+    def settings(self, conn: sqlite3.Connection, initials: str,
+                 company_name: str, language: str) -> None:
+        menu = MenuSettings()
+        menu.run(conn, initials, company_name, language)
 
 
 def main():
@@ -186,6 +183,8 @@ def main():
     if authenticated:
         menu = StartMenu()
         menu.run(conn, created_by, company_name, language)
+    else:
+        main()
 
 
 if __name__ == "__main__":

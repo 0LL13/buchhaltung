@@ -123,7 +123,8 @@ class MenuNewPerson():
             return None, None
         else:
             self.generate_table_persons(conn)
-            person_id = self.add_person_to_db(conn, created_by, name, 2)
+            initials = self.add_person_to_db(conn, created_by, name, 2)
+            person_id = self.get_person_id(conn, initials)
             menu.commit_name_to_db(conn, created_by, name, person_id)
             return name, person_id
 
@@ -177,6 +178,16 @@ class MenuNewPerson():
                                      middle_names, last_name, initials))
             conn.commit()
         return initials
+
+    def get_person_id(self, conn: sqlite3.Connection, initials: str) -> int:
+        query = """SELECT person_id FROM persons WHERE initials = ?"""
+        with conn:
+            cur = conn.cursor()
+            cur.execute(query, (initials,))
+            res = cur.fetchone()
+            print("res in get_person_id: ", res)
+            print("res[0]: ", res[0])
+            return res[0]
 
 
 if __name__ == "__main__":
