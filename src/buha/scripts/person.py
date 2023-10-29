@@ -112,34 +112,30 @@ class MenuNewPerson():
 
         return name
 
-    def enter_name(self, conn: sqlite3.Connection, created_by: str,
-                   company_name: str, language: str) -> Tuple[Name | None, int | None]:  # noqa
+    def enter_name(self, conn: sqlite3.Connection,
+                   created_by: str,
+                   company_name: str,
+                   language: str) -> Tuple[Name | None, int | None, str | None]:  # noqa
 
         # "company_name" is needed to display the company's name in MenuName
         menu = MenuName()
         name = menu.run(conn, created_by, company_name, language)  # format dataclass "Name"  # noqa
         if name is None:
             print("No entries for enter_name)")
-            return None, None
+            return None, None, None
         else:
             self.generate_table_persons(conn)
             initials = self.add_person_to_db(conn, created_by, name, 2)
             person_id = self.get_person_id(conn, initials)
             menu.commit_name_to_db(conn, created_by, name, person_id)
-            return name, person_id
+            # is_internal = is_internal()
+            return name, person_id, initials
 
     def enter_titles(self) -> None:
         pass
 
     def enter_particulars(self) -> None:
         pass
-
-    def enter_relation(self) -> None:
-        relation = input(f"{'intern/extern? ' : <8}")
-        if relation not in ["intern", "extern"]:
-            print("        Either intern or extern. Can be changed later.")
-            relation = self.enter_relation()
-        return relation
 
     def generate_table_persons(self, conn: sqlite3.Connection) -> None:
         table_persons = """CREATE TABLE IF NOT EXISTS persons (
@@ -163,6 +159,7 @@ class MenuNewPerson():
         serves as the unique identifier.
         """
         initials = mk_initials(conn, name, length)
+        print("initials in person.py add_person_to_db: ", initials)
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
         first_name = f"{name.first_name}"
         last_name = f"{name.last_name}"
@@ -188,10 +185,3 @@ class MenuNewPerson():
             print("res in get_person_id: ", res)
             print("res[0]: ", res[0])
             return res[0]
-
-
-if __name__ == "__main__":
-
-    menu = MenuNewPerson()
-    initial = "tb"
-    menu.run(initial)

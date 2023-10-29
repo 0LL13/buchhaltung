@@ -7,7 +7,6 @@ entry in "names", with names referencing to persons via foreign key."""
 import datetime
 import re
 import sqlite3
-import sys
 from operator import itemgetter
 from typing import Tuple
 from .helpers import clear_screen
@@ -263,19 +262,3 @@ class MenuName():
                         return self.name_already_in_db(conn, name)
                     else:
                         return mn.lower() == name.middle_names.lower()
-
-
-def main():
-    menu = MenuName()
-    initial = "tb"
-    prepared_values = {"fn": "Bodo", "mn": "Knuth H.", "ln": "Weibel",
-                       "nn": "Knuti", "salutation": "Herr", "suffix": "Sr.",
-                       }
-    menu.run(initial, use_prepared_values=True, prepared_values=prepared_values)  # noqa
-    menu.generate_name_instance()
-
-
-if __name__ == "__main__":
-    if 0:
-        main()
-        sys.exit()

@@ -13,7 +13,6 @@ from src.buha.scripts.helpers import pick_language
 from src.buha.scripts.helpers import continue_
 from src.buha.scripts.helpers import show_table
 from src.buha.scripts.helpers import check_for_matches
-from src.buha.scripts.helpers import mk_initials
 from src.buha.scripts.login import LoginMenu
 from src.buha.scripts.new_entry import MenuNewEntry
 from src.buha.scripts.person import MenuNewPerson as NewPerson
@@ -64,13 +63,11 @@ def setup_new_db() -> Tuple[sqlite3.Connection, str, str]:
     created_by = getpass.getuser()
     conn = activate_database(company_name)
     new_person = NewPerson()
-    name, person_id = new_person.enter_name(conn, created_by, company_name, language)  # noqa
-    initials = mk_initials(conn, name, 2)
-    print("created_by: ", created_by)
-    print("person_id: ", person_id)
-    if continue_():
-        pass
-    add_settings(conn, created_by, language, person_id, initials)
+    name, person_id, initials = new_person.enter_name(conn, created_by, company_name, language)  # noqa
+    if 0:
+        if continue_():
+            pass
+    add_settings(conn, created_by, language, person_id, initials, is_internal=True)  # noqa
 
     if 1:
         print("show_persons")

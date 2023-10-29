@@ -1,11 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # new_entry.py
-import re
 import sqlite3
 from .helpers import action_prompt
 from .helpers import clear_screen
+from .helpers import create_headline
+from .helpers import is_internal
 from .person import MenuNewPerson
+from .settings import add_settings
 
 
 """
@@ -15,6 +17,9 @@ supplier: company_name, account_nr, currency, key
 entity: company_name, street, street_nr, zip_code, city, country, key
 bank_details: name_of_bank, IBAN, BLZ, BIC, account_nr, key
 """
+
+
+screen_cleared = False
 
 
 class MenuNewEntry():
@@ -32,22 +37,15 @@ class MenuNewEntry():
         }
 
     def display_menu(self, company_name: str, language: str) -> None:
-        clear_screen()
-        company_name = company_name[:-3]
-        company_name = re.sub("_", " ", company_name)
-        length_name = 76 - len(company_name)
-        prompt = action_prompt[language]
-        length_prompt = 76 - len(prompt)
-        company_line = f"| {company_name}" + ' ' * length_name + "|"
-        chose_action = "| " + prompt + ' ' * length_prompt + "|"
+        global screen_cleared
+        menu_newentry_head = create_headline(company_name, language, prompt=action_prompt)  # noqa
 
-        menu_type_of_new_entry = f"""
-        +{'-' * 77}+
-        {company_line}
-        +{'-' * 77}+
-        {chose_action}
-        +{'-' * 77}+
+        if not screen_cleared:
+            clear_screen()
+            screen_cleared = True
+            print(menu_newentry_head)
 
+        menu_new_entry = """
         1: New person
         2: New entity
         3: New object
@@ -56,7 +54,7 @@ class MenuNewEntry():
         9: Back
         """
 
-        print(menu_type_of_new_entry)
+        print(menu_new_entry)
 
     def run(self, conn: sqlite3.Connection, created_by: str,
             company_name: str, language: str) -> None:
@@ -70,7 +68,6 @@ class MenuNewEntry():
                 break
             elif choice in self.choices:
                 action = self.choices.get(choice)
-                print("action iin new_entry: ", action)
                 if action:
                     action(conn, created_by, company_name, language)
             else:
@@ -80,7 +77,9 @@ class MenuNewEntry():
                    company_name: str, language: str) -> None:
 
         menu = MenuNewPerson()
-        menu.run(conn, created_by, company_name, language)
+        name, person_id, initials = menu.enter_name(conn, created_by, company_name, language)  # noqa
+        internal = is_internal()
+        add_settings(conn, created_by, language, person_id, initials, is_internal=internal)  # noqa
 
     def new_entity(self, conn, initials) -> None:
         print(f"change entity by {initials}")

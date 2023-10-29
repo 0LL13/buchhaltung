@@ -31,6 +31,7 @@ def generate_table_settings(conn: sqlite3.Connection) -> None:
                         timestamp TEXT,
                         language TEXT,
                         initials TEXT,
+                        is_internal BOOL,
                         salt BLOB NOT NULL,
                         password_hash BLOB NOT NULL,
                         FOREIGN KEY (person_id)
@@ -45,11 +46,11 @@ def generate_table_settings(conn: sqlite3.Connection) -> None:
 
 
 def add_settings(conn: sqlite3.Connection, created_by: str, language: str,
-                 person_id: int, initials: str) -> None:
+                 person_id: int, initials: str, is_internal: bool = False) -> None:  # noqa
     add_settings = """INSERT INTO settings (
                       person_id, created_by, timestamp, language, initials,
-                      salt, password_hash)
-                      VALUES (?, ?, ?, ?, ?, ?, ?)"""
+                      is_internal, salt, password_hash)
+                      VALUES (?, ?, ?, ?, ?, ?, ?, ?)"""
     timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
     password = "asd"
     salt, password_hash = hash_password(password)
@@ -61,7 +62,7 @@ def add_settings(conn: sqlite3.Connection, created_by: str, language: str,
         generate_table_settings(conn)
         cur = conn.cursor()
         cur.execute(add_settings, (person_id, created_by, timestamp, language,
-                                   initials, salt, password_hash))
+                                   initials, is_internal, salt, password_hash))
         conn.commit()
 
 
@@ -70,8 +71,8 @@ def update_language(conn: sqlite3.Connection, language: str,
 
     generate_table_settings(conn)
     update_language = """UPDATE settings
-                          SET language = ?
-                          WHERE person_id = ?"""
+                         SET language = ?
+                         WHERE person_id = ?"""
 
     with conn:
         cur = conn.cursor()
@@ -180,7 +181,3 @@ class MenuSettings():
             else:
                 print("Password not correct. Too many tries.")
                 return None
-
-
-if __name__ == "__main__":
-    pass

@@ -77,14 +77,14 @@ def mk_initials(conn: sqlite3.Connection, name: Name, length: int) -> str:
     return initials
 
 
-def initials_in_table(conn: sqlite3.Connection, initials: str) -> bool:
+def initials_in_table(conn: sqlite3.Connection, new_initials: str) -> bool:
     with conn:
         cur = conn.cursor()
         res = cur.execute("SELECT initials FROM persons")
-        initials = res.fetchall()
-        for res_initials in initials:
-            abbr = ''.join(str(c) for c in res_initials)
-            if abbr == initials:
+        res_initials = res.fetchall()
+        for initials_in_db in res_initials:
+            existing_initials = ''.join(str(c) for c in initials_in_db)
+            if existing_initials == new_initials:
                 return True
         return False
 
@@ -198,6 +198,13 @@ def get_person_id(conn: sqlite3.Connection, initials: str) -> int:
         row = cur.fetchone()
         person_id = row[0]
         return person_id
+
+
+def is_internal() -> bool:
+    relation = input("internal? y/N : ")
+    if relation == "y":
+        return True
+    return False
 
 
 # ############## show tables ##################################################
