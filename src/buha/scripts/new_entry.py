@@ -46,13 +46,13 @@ class MenuNewEntry():
             print(menu_newentry_head)
 
         menu_new_entry = """
-        1: New person
-        2: New entity
-        3: New object
-        4: New project
-        5: New service
-        9: Back
-        """
+    1: New person
+    2: New entity
+    3: New object
+    4: New project
+    5: New service
+    9: Back
+    """
 
         print(menu_new_entry)
 
@@ -62,7 +62,7 @@ class MenuNewEntry():
         # "created_by" are the initials of the person working with the program
         while True:
             self.display_menu(company_name, language)
-            choice = input("        Enter an option: ")
+            choice = input("    Enter an option: ")
 
             if not self.choices.get(choice):
                 break
@@ -71,15 +71,16 @@ class MenuNewEntry():
                 if action:
                     action(conn, created_by, company_name, language)
             else:
-                print(f"{choice} is not a valid choice.")
+                print(f"    {choice} is not a valid choice.")
 
     def new_person(self, conn: sqlite3.Connection, created_by: str,
                    company_name: str, language: str) -> None:
 
         menu = MenuNewPerson()
         name, person_id, initials = menu.enter_name(conn, created_by, company_name, language)  # noqa
-        internal = is_internal()
-        add_settings(conn, created_by, language, person_id, initials, is_internal=internal)  # noqa
+        if (name, person_id, initials) != (None, None, None):
+            internal = is_internal()
+            add_settings(conn, created_by, language, person_id, initials, is_internal=internal)  # noqa
 
     def new_entity(self, conn, initials) -> None:
         print(f"change entity by {initials}")

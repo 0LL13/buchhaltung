@@ -115,16 +115,17 @@ class StartMenu():
         if not screen_cleared:
             clear_screen()
             screen_cleared = True
-            print(menu_main_head)
+
+        print(menu_main_head)
 
         menu_first_action = """
-        1: New Entry
-        2: Change Entry
-        3: Search Entry
-        4: Settings
-        5: Logout
-        9: Quit
-        """
+    1: New Entry
+    2: Change Entry
+    3: Search Entry
+    4: Settings
+    5: Logout
+    9: Quit
+    """
 
         print(menu_first_action)
 
@@ -137,7 +138,7 @@ class StartMenu():
 
         while True:
             self.display_menu(company_name, language)
-            choice = input("        Enter an option: ")
+            choice = input("    Enter an option: ")
 
             if not self.choices.get(choice):
                 break
@@ -146,13 +147,12 @@ class StartMenu():
                 if action:
                     action(conn, created_by, company_name, language)
             else:
-                print(f"        {choice} is not a valid choice.")
+                print(f"    {choice} is not a valid choice.")
 
         conn.close()
 
     def new_entry(self, conn: sqlite3.Connection, created_by: str,
                   company_name: str, language: str) -> None:
-        print(f"new entry by {created_by}")
         menu = MenuNewEntry()
         menu.run(conn, created_by, company_name, language)
 

@@ -57,18 +57,18 @@ class MenuName():
             print(menu_names_head)
 
         menu_names_entry = """
-        Fields with (*) are obligatory
+    Fields with (*) are obligatory
 
-        1: (*) First Name
-        2: Middle Name(s)
-        3: (*) Last Name
-        4: Nickname
-        5: Maiden Name
-        6: Generational Suffix (Jr., Sr.)
-        7: Salutation
-        8: Commit and back
-        9: Back
-        """
+    1: (*) First Name
+    2: Middle Name(s)
+    3: (*) Last Name
+    4: Nickname
+    5: Maiden Name
+    6: Generational Suffix (Jr., Sr.)
+    7: Salutation
+    8: Commit and back
+    9: Back
+    """
 
         print(menu_names_entry)
 
@@ -80,7 +80,7 @@ class MenuName():
 
         while True:
             self.display_menu(company_name, language)
-            choice = input("        Enter an option: ")
+            choice = input("    Enter an option: ")
             if not self.choices.get(choice):
                 break
             else:
@@ -96,43 +96,42 @@ class MenuName():
         return None, None
 
     def commit(self, conn: sqlite3.Connection, created_by: str) -> Tuple:
-
         name = self.generate_name_instance()
         return name
 
     def enter_firstname(self) -> None:
-        firstname = input("First Name: ")
+        firstname = input("    First Name: ")
         if not firstname.isalpha():
             firstname = self.enter_firstname()
         self.entries["fn"] = firstname
 
     def enter_middlenames(self) -> None:
-        middlename = input("Middle Name(s): ")
+        middlename = input("    Middle Name(s): ")
         middlename = re.sub(" +", " ", middlename)
         if " " in middlename:
             for mn in middlename.split(" "):
                 if not mn.isalpha():
-                    print("Input must contain alphabetic characters only.")
-                    choice = input("Try again? y/N: ")
+                    print("    Input must contain alphabetic characters only.")
+                    choice = input("    Try again? y/N: ")
                     if choice == "y":
                         middlename = self.enter_middlename()
                     else:
                         middlename = None
         elif not middlename.isalpha():
-            print("Input must contain alphabetic characters only.")
+            print("    Input must contain alphabetic characters only.")
             middlename = self.enter_middlename()
         self.entries["mn"] = middlename
 
     def enter_lastname(self) -> None:
-        lastname = input("Last Name: ")
+        lastname = input("    Last Name: ")
         if not lastname.isalpha():
             lastname = self.enter_lastname()
         self.entries["ln"] = lastname
 
     def enter_nickname(self) -> None:
-        nickname = input("Nickname: ")
+        nickname = input("    Nickname: ")
         if not nickname.isalnum():
-            choice = input("Try again? y/N: ")
+            choice = input("    Try again? y/N: ")
             if choice == "y":
                 nickname = self.enter_nickname()
             else:
@@ -140,33 +139,33 @@ class MenuName():
         self.entries["nn"] = nickname
 
     def enter_maidenname(self) -> None:
-        maidenname = input("Maiden Name: ")
+        maidenname = input("    Maiden Name: ")
         maidenname = re.sub(" +", " ", maidenname)
         if " " in maidenname:
             for mn in maidenname.split(" "):
                 if not mn.isalpha():
-                    print("Input must contain alphabetic characters only.")
+                    print("    Input must contain alphabetic characters only.")
                     maidenname = self.enter_maidenname()
         elif not maidenname.isalpha():
-            print("Input must contain alphabetic characters only.")
+            print("    Input must contain alphabetic characters only.")
             maidenname = self.enter_maidenname()
 
         self.entries["maiden"] = maidenname
 
     def enter_generational_suffix(self) -> None:
-        suffix = input("Generational Suffix: ")
+        suffix = input("    Generational Suffix: ")
         if suffix not in ["Jr.", "Sr.", "Jr", "Sr", "Jnr", "Snr", "I", "II", "III"]:  # noqa
-            choice = input("Try again? y/N: ")
+            choice = input("    Try again? y/N: ")
             if choice == "y":
-                suffix = input("Generational Suffix: ")
+                suffix = input("    Generational Suffix: ")
             else:
                 suffix = None
         self.entries["suffix"] = suffix
 
     def enter_salutation(self) -> None:
-        salutation = input("Salutation: ")
+        salutation = input("    Salutation: ")
         if salutation not in ["Herr", "Frau", "Fr.", "Hr."]:
-            choice = input("Try again? y/N: ")
+            choice = input("    Try again? y/N: ")
             if choice == "y":
                 salutation = self.enter_salutation()
             else:

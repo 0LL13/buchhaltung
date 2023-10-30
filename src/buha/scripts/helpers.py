@@ -25,12 +25,12 @@ action_prompt = {
 
 
 state_company_prompt = {
-    "fr": "        Indiquez votre entreprise: ",
-    "en": "        State your company: ",
-    "de": "        Name Ihres Unternehmens: ",
-    "es": "        Indique su empresa: ",
-    "it": "        Dichiara la tua azienda: ",
-    "tr": "        Şirketinizi belirtin: ",
+    "fr": "    Indiquez votre entreprise: ",
+    "en": "    State your company: ",
+    "de": "    Name Ihres Unternehmens: ",
+    "es": "    Indique su empresa: ",
+    "it": "    Dichiara la tua azienda: ",
+    "tr": "    Şirketinizi belirtin: ",
 }
 
 
@@ -95,7 +95,8 @@ def path_to_database() -> Path:
     cwd = Path(__file__).resolve().parent
     db_dir = cwd.parent / "data"
     db_path = db_dir.resolve()
-    print(str(db_path))
+    if 0:
+        print(str(db_path))
     return db_path
 
 
@@ -124,7 +125,8 @@ def check_for_matches(company_name: str, targets: list, language: str) -> str:
     elif max(scores) > 50:
         choice = input(f"Did you mean {best_match}? y/N: ")
         if choice == "y":
-            print("best_match: ", best_match)
+            if 0:
+                print("best_match: ", best_match)
             return best_match
 
 
@@ -134,14 +136,14 @@ def check_databases() -> list:
     """
     targets = []
 
-    print("inside check_databases")
+    # print("inside check_databases")
     path_to_db = path_to_database()
     for (dirpath, dirnames, filenames) in os.walk(path_to_db):
         for filename in filenames:
-            print(filename)
+            # print(filename)
             if filename.endswith(".db"):
                 targets.append(filename)
-    print("check_databases, targets: ", targets)
+    # print("check_databases, targets: ", targets)
 
     return targets
 
@@ -150,9 +152,7 @@ def database_exists(company_name: str) -> bool:
     path = path_to_database()
     database_path = os.path.join(os.path.dirname(__file__), path + company_name)  # noqa
     if not os.path.isfile(database_path):
-        print("inside database_exists: no file found")
         return False
-    print("inside database_exists: file exists")
     return True
 
 
@@ -160,20 +160,20 @@ def pick_language() -> str:
     clear_screen()
 
     pick_language_prompt = f"""
-        +{'-' * 77}+
-        | BUHA START MENU{' ' * 61}|
-        +{'-' * 77}+
+    +{'-' * 77}+
+    | BUHA START MENU{' ' * 61}|
+    +{'-' * 77}+
 
-        Welche Sprache? de
-        Which language? en
-        Quelle langue? fr
-        Que lenguaje? es
-        Quale lingua? it
-        Hangi dil? tr
+    Welche Sprache? de
+    Which language? en
+    Quelle langue? fr
+    Que lenguaje? es
+    Quale lingua? it
+    Hangi dil? tr
 
-        Exit? x
+    Exit? x
 
-        --> """
+    --> """
 
     language = input(pick_language_prompt)
     if language == "x":
@@ -201,7 +201,7 @@ def get_person_id(conn: sqlite3.Connection, initials: str) -> int:
 
 
 def is_internal() -> bool:
-    relation = input("internal? y/N : ")
+    relation = input("    internal? y/N : ")
     if relation == "y":
         return True
     return False
@@ -230,17 +230,11 @@ def show_all(conn: sqlite3.Connection, person_id: int) -> None:
 
 
 def show_my_table(conn: sqlite3.Connection, table: str, person_id: int) -> None:  # noqa
-    print("table: ", table, type(table))
-    print("person_id: ", person_id, type(person_id))
-    print("conn: ", conn)
     with conn:
         cur = conn.cursor()
         query = f"SELECT * FROM {table} WHERE person_id = ?"
         cur.execute(query, (person_id,))
         res = cur.fetchall()
-        print("res: ", res)
         if res:
             res_value = res[0]
             print(res_value)
-        else:
-            print("none")

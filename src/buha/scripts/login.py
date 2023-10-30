@@ -28,9 +28,9 @@ class LoginMenu():
             print(menu_login_head)
 
         login_menu = """
-        1: Login
-        2: Quit
-        """
+    1: Login
+    2: Quit
+    """
 
         print(login_menu)
 
@@ -44,7 +44,7 @@ class LoginMenu():
         """
         while True:
             self.display_menu(company_name, language)
-            choice = input("Enter an option: ")
+            choice = input("    Enter an option: ")
             if choice == "1":
                 authenticated, initials = login_employee(conn, language,
                                                          company_name)
@@ -63,15 +63,26 @@ def login_employee(conn: sqlite3.Connection, language: str,
                    company_name: str) -> Tuple[bool, str]:
     """Returns authenticated, initials."""
 
-    initials = input("Enter initials: ")
+    initials = input("    Enter initials: ")
     initials_validated = initials_in_table(conn, initials)
     if initials_validated:
-        password = getpass.getpass("Enter password: ")
-        password_validated = password_correct(conn, initials, password)
-        if password_validated:
-            return True, initials
-
+        if is_internal(conn, initials):
+            password = getpass.getpass("    Enter password: ")
+            password_validated = password_correct(conn, initials, password)
+            if password_validated:
+                return True, initials
     return False, None
+
+
+def is_internal(conn: sqlite3.Connection, initials: str) -> bool:
+    with conn:
+        cur = conn.cursor()
+        query = "SELECT is_internal FROM settings WHERE initials = ?"
+        res = cur.execute(query, (initials,))
+        res_query = res.fetchone()
+        if res_query:
+            return res_query[0]
+        return False
 
 
 def hash_password(password, salt=None):

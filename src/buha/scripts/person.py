@@ -80,12 +80,12 @@ class MenuNewPerson():
             print(menu_person_head)
 
         menu_person_entry = """
-        1: Name
-        2: Titles
-        3: Additional personal data
-        4: Show persons
-        9: Back
-        """
+    1: Name
+    2: Titles
+    3: Additional personal data
+    4: Show persons
+    9: Back
+    """
 
         print(menu_person_entry)
 
@@ -96,7 +96,7 @@ class MenuNewPerson():
         """
         while True:
             self.display_menu(company_name, language)
-            choice = input("        Enter an option: ")
+            choice = input("    Enter an option: ")
             if not self.choices.get(choice):
                 name = None
                 break
@@ -108,7 +108,7 @@ class MenuNewPerson():
                     name = action(conn, created_by, company_name, language)
                     # commit_to_db(name, names_key)
                 else:
-                    print(f"        {choice} is not a valid choice.")
+                    print(f"    {choice} is not a valid choice.")
 
         return name
 
@@ -120,15 +120,14 @@ class MenuNewPerson():
         # "company_name" is needed to display the company's name in MenuName
         menu = MenuName()
         name = menu.run(conn, created_by, company_name, language)  # format dataclass "Name"  # noqa
-        if name is None:
-            print("No entries for enter_name)")
+        if name == (None, None):
+            # print("    No entries for enter_name")
             return None, None, None
         else:
             self.generate_table_persons(conn)
             initials = self.add_person_to_db(conn, created_by, name, 2)
             person_id = self.get_person_id(conn, initials)
             menu.commit_name_to_db(conn, created_by, name, person_id)
-            # is_internal = is_internal()
             return name, person_id, initials
 
     def enter_titles(self) -> None:
@@ -159,7 +158,8 @@ class MenuNewPerson():
         serves as the unique identifier.
         """
         initials = mk_initials(conn, name, length)
-        print("initials in person.py add_person_to_db: ", initials)
+        if 0:
+            print("initials in person.py add_person_to_db: ", initials)
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
         first_name = f"{name.first_name}"
         last_name = f"{name.last_name}"
@@ -182,6 +182,7 @@ class MenuNewPerson():
             cur = conn.cursor()
             cur.execute(query, (initials,))
             res = cur.fetchone()
-            print("res in get_person_id: ", res)
-            print("res[0]: ", res[0])
+            if 0:
+                print("res in get_person_id: ", res)
+                print("res[0]: ", res[0])
             return res[0]

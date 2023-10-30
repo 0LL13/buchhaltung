@@ -54,7 +54,7 @@ def add_settings(conn: sqlite3.Connection, created_by: str, language: str,
     timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
     password = "asd"
     salt, password_hash = hash_password(password)
-    print("person_id: ", person_id)
+    # print("person_id: ", person_id)
     if continue_():
         pass
 
@@ -130,11 +130,11 @@ class MenuSettings():
             print(menu_settings_head)
 
         menu_change_settings = """
-        1: Change language
-        2: Change password
-        3: Show my settings
-        9: Back
-        """
+    1: Change language
+    2: Change password
+    3: Show my settings
+    9: Back
+    """
 
         print(menu_change_settings)
 
@@ -143,7 +143,7 @@ class MenuSettings():
 
         while True:
             self.display_menu(company_name, language)
-            choice = input("        Enter an option: ")
+            choice = input("    Enter an option: ")
 
             if not self.choices.get(choice):
                 break
@@ -157,7 +157,7 @@ class MenuSettings():
                 person_id = get_person_id(conn, initials)
                 show_my_table(conn, "settings", person_id)
             else:
-                print(f"{choice} is not a valid choice.")
+                print(f"    {choice} is not a valid choice.")
 
         return None
 
@@ -169,15 +169,15 @@ class MenuSettings():
     def change_password(self, conn: sqlite3.Connection, initials: str,
                         language: str, counter: int = 1) -> str | None:
 
-        password = input("Enter old password: ")
+        password = input("    Enter old password: ")
         if password_correct(conn, initials, password):
-            new_password = input("Enter new password: ")
+            new_password = input("    Enter new password: ")
             return new_password
         else:
             counter = counter + 1
             if counter <= 3:
-                print(f"Password not correct. Try again ({counter} of 3): ")
+                print(f"    Password not correct. Try again ({counter} of 3): ")  # noqa
                 return self.change_password(conn, initials, language, counter)
             else:
-                print("Password not correct. Too many tries.")
+                print("    Password not correct. Too many tries.")
                 return None
