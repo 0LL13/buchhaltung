@@ -9,6 +9,9 @@ import re
 import sqlite3
 from operator import itemgetter
 from typing import Tuple
+from .constants import choose_option
+from .constants import menu_names_entry
+from .constants import name_particulars_prompt
 from .helpers import clear_screen
 from .helpers import create_headline
 from .shared import Name
@@ -48,7 +51,7 @@ class MenuName():
 
     def display_menu(self, company_name: str, language: str) -> None:
         global screen_cleared
-        prompt = "BASIC NAME PARTICULARS"
+        prompt = name_particulars_prompt[language]
 
         menu_names_head = create_headline(company_name, language, prompt=prompt)  # noqa
         if not screen_cleared:
@@ -56,21 +59,7 @@ class MenuName():
             screen_cleared = True
             print(menu_names_head)
 
-        menu_names_entry = """
-    Fields with (*) are obligatory
-
-    1: (*) First Name
-    2: Middle Name(s)
-    3: (*) Last Name
-    4: Nickname
-    5: Maiden Name
-    6: Generational Suffix (Jr., Sr.)
-    7: Salutation
-    8: Commit and back
-    9: Back
-    """
-
-        print(menu_names_entry)
+        print(menu_names_entry[language])
 
     def run(self, conn: sqlite3.Connection, created_by: str, company_name: str,
             language: str) -> Tuple[str | None, str | None]:
@@ -80,7 +69,7 @@ class MenuName():
 
         while True:
             self.display_menu(company_name, language)
-            choice = input("    Enter an option: ")
+            choice = choose_option(language)
             if not self.choices.get(choice):
                 break
             else:

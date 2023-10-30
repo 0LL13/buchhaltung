@@ -5,11 +5,12 @@ import getpass
 import sqlite3
 from typing import Tuple
 
+from src.buha.scripts.constants import choose_option  # actually input function
 from src.buha.scripts.helpers import check_databases  # looking for databases
 from src.buha.scripts.helpers import state_company
 from src.buha.scripts.helpers import path_to_database
 from src.buha.scripts.helpers import create_headline
-from src.buha.scripts.helpers import pick_language
+# from src.buha.scripts.helpers import pick_language
 from src.buha.scripts.helpers import continue_
 from src.buha.scripts.helpers import show_table
 from src.buha.scripts.helpers import check_for_matches
@@ -22,11 +23,11 @@ from src.buha.scripts.shared import clear_screen
 
 
 """
-Entry point for buha. Get language first, then name of company. The name of the
-company makes the name of the database. If no database of that name is there,
-a new database will be created and a first employee can register. Once a
-database is installed employees log in with initials and password after they
-picked their language and company.
+Entry point for buha. Get name of company. The name of the company makes the
+name of the database. If no database of that name is there, a new database will
+be created and a first employee is added. Once a database is installed
+employees log in with initials (unique identifiers) and password after they
+picked their company.
 """
 
 
@@ -37,28 +38,38 @@ def initialize() -> Tuple[sqlite3.Connection, str, str]:
     """
     - check if database exists
     - if not exists:
-        - start new db
-        - create first employee
-        - create settings (initials, password, language) for first employee
+        - start new db: setup_new_db
+            - language
+            - company_name
+            - created_by
+            - activate new database -> conn
+            - create first employee: new_person
+            - add_settings (initials, password, language) for first employee
     - if exists:
-        - login
-        - language should be clear after login, but can be changed in settings
-        - give option to not login and create new db instead
+        - ask for language, company_name
+        - if company_name doesn't fit create new database (start_new_db)
+        - return sqlite3.Connection, language and company_name -> login
     """
     targets = check_databases()  # returns list with databases
     if targets == []:   # no database found
         conn, language, company_name = setup_new_db()
         return conn, language, company_name
     else:
-        language = pick_language()
+        # language = pick_language()
+        language = "de"
         company_name = state_company(language)
         match = check_for_matches(company_name, targets, language)
+        if match is None:
+            print("    Neue Firma.")
+            conn, language, company_name = setup_new_db()
+            return conn, language, company_name
         conn = activate_database(match)
         return conn, language, match
 
 
 def setup_new_db() -> Tuple[sqlite3.Connection, str, str]:
-    language = pick_language()
+    # language = pick_language()
+    language = "de"
     company_name = state_company(language)  # database will be named after company  # noqa
     created_by = getpass.getuser()
     conn = activate_database(company_name)
@@ -119,10 +130,10 @@ class StartMenu():
         print(menu_main_head)
 
         menu_first_action = """
-    1: New Entry
-    2: Change Entry
-    3: Search Entry
-    4: Settings
+    1: Neuer Eintrag
+    2: Eintrag ändern
+    3: Eintrag suchen
+    4: Einstellungen
     5: Logout
     9: Quit
     """
@@ -138,7 +149,7 @@ class StartMenu():
 
         while True:
             self.display_menu(company_name, language)
-            choice = input("    Enter an option: ")
+            choice = choose_option(language)
 
             if not self.choices.get(choice):
                 break
@@ -147,7 +158,7 @@ class StartMenu():
                 if action:
                     action(conn, created_by, company_name, language)
             else:
-                print(f"    {choice} is not a valid choice.")
+                print(f"    {choice} ist keine zulässige Eingabe.")
 
         conn.close()
 

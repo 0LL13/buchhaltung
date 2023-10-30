@@ -7,6 +7,9 @@ import datetime
 import sqlite3
 from dataclasses import dataclass
 from typing import Tuple
+from .constants import enter_person_prompt
+from .constants import menu_person_entry
+from .constants import languages
 from .helpers import clear_screen
 from .helpers import create_headline
 from .helpers import mk_initials
@@ -18,28 +21,16 @@ from .names import MenuName
 screen_cleared = False
 
 
-prompt = {
-    "de": "PERSONENEINTRAG",
-    "it": "INGRESSO DELLA PERSONA",
-    "es": "ENTRADA DE PERSONA",
-    "tr": "KIŞI GIRIŞI",
-    "fr": "ENTRÉE DE PERSONNE",
-    "en": "PERSON ENTRY",
-}
-
-languages = ["de", "en", "fr", "es", "it", "tr"]
-
-
 def pick_language() -> str:
     pick_language_prompt = """
-        Welche Sprache? de
-        Which language? en
-        Quelle langue? fr
-        Que lenguaje? es
-        Quale lingua? it
-        Hangi dil? tr
+    Welche Sprache? de
+    Which language? en
+    Quelle langue? fr
+    Que lenguaje? es
+    Quale lingua? it
+    Hangi dil? tr
 
-        --> """
+    --> """
 
     language = input(pick_language_prompt)
     if language not in languages:
@@ -73,21 +64,13 @@ class MenuNewPerson():
     def display_menu(self, company_name: str, language: str) -> None:
         global screen_cleared
 
-        menu_person_head = create_headline(company_name, language, prompt=prompt)  # noqa
+        menu_person_head = create_headline(company_name, language, prompt=enter_person_prompt)  # noqa
         if not screen_cleared:
             clear_screen()
             screen_cleared = True
             print(menu_person_head)
 
-        menu_person_entry = """
-    1: Name
-    2: Titles
-    3: Additional personal data
-    4: Show persons
-    9: Back
-    """
-
-        print(menu_person_entry)
+        print(menu_person_entry[language])
 
     def run(self, conn: sqlite3.Connection, created_by: str, company_name: str,
             language: str) -> str | None:
@@ -96,7 +79,7 @@ class MenuNewPerson():
         """
         while True:
             self.display_menu(company_name, language)
-            choice = input("    Enter an option: ")
+            choice = input("    Option wählen: ")
             if not self.choices.get(choice):
                 name = None
                 break
@@ -108,7 +91,7 @@ class MenuNewPerson():
                     name = action(conn, created_by, company_name, language)
                     # commit_to_db(name, names_key)
                 else:
-                    print(f"    {choice} is not a valid choice.")
+                    print(f"    {choice} ist keine zulässige Eingabe.")
 
         return name
 

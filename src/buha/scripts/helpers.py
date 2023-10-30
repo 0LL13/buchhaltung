@@ -8,31 +8,13 @@ import sqlite3
 import sys
 from fuzzywuzzy import fuzz
 from pathlib import Path
+from .constants import action_prompt
+from .constants import state_company_prompt
 from .shared import Name
 from .shared import clear_screen
 
 
 # ############## headline generator ###########################################
-
-action_prompt = {
-    "de": "WÄHLEN SIE EINE AKTION",
-    "it": "SCEGLI UN'AZIONE",
-    "es": "ELIGE ACCIÓN",
-    "tr": "EYLEM SEÇIN",
-    "en": "CHOOSE ACTION",
-    "fr": "CHOISIR UNE ACTION",
-}
-
-
-state_company_prompt = {
-    "fr": "    Indiquez votre entreprise: ",
-    "en": "    State your company: ",
-    "de": "    Name Ihres Unternehmens: ",
-    "es": "    Indique su empresa: ",
-    "it": "    Dichiara la tua azienda: ",
-    "tr": "    Şirketinizi belirtin: ",
-}
-
 
 def create_headline(company_name: str, language: str,
                     prompt: str = action_prompt) -> str:
@@ -109,7 +91,7 @@ def state_company(language: str) -> str:
 
 # type hint best practice for v3.10 or above
 # https://stackoverflow.com/a/69440627/6597765
-def check_for_matches(company_name: str, targets: list, language: str) -> str:
+def check_for_matches(company_name: str, targets: list, language: str) -> str | None:  # noqa
     """
     Check if a name resembles that of the names found in the database folder.
     "targets" will be a non-empty list bc it's in an if-else condition.
@@ -128,6 +110,8 @@ def check_for_matches(company_name: str, targets: list, language: str) -> str:
             if 0:
                 print("best_match: ", best_match)
             return best_match
+    else:
+        return None
 
 
 def check_databases() -> list:

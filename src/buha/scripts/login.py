@@ -7,6 +7,9 @@ import os
 import sqlite3
 import sys
 from typing import Tuple
+from .constants import enter_initials
+from .constants import choose_option
+from .constants import login_prompt
 from .helpers import clear_screen
 from .helpers import create_headline
 
@@ -19,7 +22,7 @@ class LoginMenu():
 
     def display_menu(self, company_name: str, language: str) -> None:
         global screen_cleared
-        prompt = "LOGIN MENU"
+        prompt = login_prompt[language]
         menu_login_head = create_headline(company_name, language, prompt=prompt)  # noqa
 
         if not screen_cleared:
@@ -44,7 +47,7 @@ class LoginMenu():
         """
         while True:
             self.display_menu(company_name, language)
-            choice = input("    Enter an option: ")
+            choice = choose_option(language)
             if choice == "1":
                 authenticated, initials = login_employee(conn, language,
                                                          company_name)
@@ -63,7 +66,7 @@ def login_employee(conn: sqlite3.Connection, language: str,
                    company_name: str) -> Tuple[bool, str]:
     """Returns authenticated, initials."""
 
-    initials = input("    Enter initials: ")
+    initials = enter_initials(language)
     initials_validated = initials_in_table(conn, initials)
     if initials_validated:
         if is_internal(conn, initials):

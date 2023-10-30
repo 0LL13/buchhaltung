@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 # new_entry.py
 import sqlite3
-from .helpers import action_prompt
+from .constants import new_entry_prompt
 from .helpers import clear_screen
 from .helpers import create_headline
 from .helpers import is_internal
@@ -38,7 +38,7 @@ class MenuNewEntry():
 
     def display_menu(self, company_name: str, language: str) -> None:
         global screen_cleared
-        menu_newentry_head = create_headline(company_name, language, prompt=action_prompt)  # noqa
+        menu_newentry_head = create_headline(company_name, language, prompt=new_entry_prompt)  # noqa
 
         if not screen_cleared:
             clear_screen()
