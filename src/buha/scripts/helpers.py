@@ -8,7 +8,6 @@ import sqlite3
 import sys
 from fuzzywuzzy import fuzz
 from pathlib import Path
-from .constants import action_prompt
 from .constants import state_company_prompt
 from .shared import Name
 from .shared import clear_screen
@@ -16,21 +15,19 @@ from .shared import clear_screen
 
 # ############## headline generator ###########################################
 
-def create_headline(company_name: str, language: str,
-                    prompt: str = action_prompt) -> str:
+def create_headline(company_name: str, headline: str) -> str:
     company_name = company_name[:-3]
     company_name = re.sub("_", " ", company_name)
     length_name = 76 - len(company_name)
-    prompt = action_prompt[language]
-    length_prompt = 76 - len(prompt)
+    length_headline = 76 - len(headline)
     company_line = f"| {company_name}" + ' ' * length_name + "|"
-    final_action_prompt = "| " + prompt + ' ' * length_prompt + "|"
+    headline_final = "| " + headline + ' ' * length_headline + "|"
 
     menu_xxxxx_head = f"""
     +{'-' * 77}+
     {company_line}
     +{'-' * 77}+
-    {final_action_prompt}
+    {headline_final}
     +{'-' * 77}+"""
 
     return menu_xxxxx_head

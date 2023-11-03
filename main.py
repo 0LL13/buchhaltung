@@ -5,21 +5,17 @@ import getpass
 import sqlite3
 from typing import Tuple
 
-from src.buha.scripts.constants import choose_option  # actually input function
 from src.buha.scripts.helpers import check_databases  # looking for databases
 from src.buha.scripts.helpers import state_company
 from src.buha.scripts.helpers import path_to_database
-from src.buha.scripts.helpers import create_headline
-# from src.buha.scripts.helpers import pick_language
 from src.buha.scripts.helpers import continue_
 from src.buha.scripts.helpers import show_table
 from src.buha.scripts.helpers import check_for_matches
+from src.buha.scripts.helpers import clear_screen
+from src.buha.scripts.start import MenuStart
 from src.buha.scripts.login import LoginMenu
-from src.buha.scripts.new_entry import MenuNewEntry
 from src.buha.scripts.person import MenuNewPerson as NewPerson
 from src.buha.scripts.settings import add_settings
-from src.buha.scripts.settings import MenuSettings
-from src.buha.scripts.shared import clear_screen
 
 
 """
@@ -50,13 +46,17 @@ def initialize() -> Tuple[sqlite3.Connection, str, str]:
         - if company_name doesn't fit create new database (start_new_db)
         - return sqlite3.Connection, language and company_name -> login
     """
+    global screen_cleared
+    if not screen_cleared:
+        clear_screen()
+        screen_cleared = True
     targets = check_databases()  # returns list with databases
+    # language can be changed in settings
+    language = "de"
     if targets == []:   # no database found
-        conn, language, company_name = setup_new_db()
+        conn, language, company_name = setup_new_db(language)
         return conn, language, company_name
     else:
-        # language = pick_language()
-        language = "de"
         company_name = state_company(language)
         match = check_for_matches(company_name, targets, language)
         if match is None:
@@ -67,20 +67,18 @@ def initialize() -> Tuple[sqlite3.Connection, str, str]:
         return conn, language, match
 
 
-def setup_new_db() -> Tuple[sqlite3.Connection, str, str]:
-    # language = pick_language()
-    language = "de"
-    company_name = state_company(language)  # database will be named after company  # noqa
+def setup_new_db(language: str) -> Tuple[sqlite3.Connection, str, str]:
+    # database will be named after company
+    company_name = state_company(language)
     created_by = getpass.getuser()
     conn = activate_database(company_name)
+    # first person of the company to be created
     new_person = NewPerson()
     name, person_id, initials = new_person.enter_name(conn, created_by, company_name, language)  # noqa
-    if 0:
-        if continue_():
-            pass
+    # is_internal is True because this is the very first person to be created.
     add_settings(conn, created_by, language, person_id, initials, is_internal=True)  # noqa
 
-    if 1:
+    if 0:
         print("show_persons")
         show_table(conn, "persons")
         print("show_names")
@@ -89,6 +87,7 @@ def setup_new_db() -> Tuple[sqlite3.Connection, str, str]:
         show_table(conn, "settings")
         if continue_():
             pass
+
     return conn, language, company_name
 
 
@@ -96,101 +95,21 @@ def activate_database(company_name: str) -> sqlite3.Connection:
     path = path_to_database()
     db_path = path / company_name
     if 0:
-        print("activate_database, path, company_name: ", path, company_name)
-        print(db_path)
+        print("activate_database in main.py: ")
+        print("path: ", path)
+        print("company_name: ", company_name)
+        print("db_path: ", db_path)
     conn = sqlite3.connect(db_path)
     return conn
-
-
-class StartMenu():
-    """
-    The Start menu options: create/change/search new entry or settings or
-    logout.
-    """
-
-    def __init__(self):
-        self.choices = {
-            "1": self.new_entry,
-            "2": self.change_entry,
-            "3": self.search_entry,
-            "4": self.settings,
-            "5": self.logout,
-            "9": False
-        }
-
-    def display_menu(self, company_name: str, language: str) -> None:
-        global screen_cleared
-        prompt = "CHOSE ACTION"
-        menu_main_head = create_headline(company_name, language, prompt=prompt)
-
-        if not screen_cleared:
-            clear_screen()
-            screen_cleared = True
-
-        print(menu_main_head)
-
-        menu_first_action = """
-    1: Neuer Eintrag
-    2: Eintrag ändern
-    3: Eintrag suchen
-    4: Einstellungen
-    5: Logout
-    9: Quit
-    """
-
-        print(menu_first_action)
-
-    def run(self, conn: sqlite3.Connection, created_by: str,
-            company_name: str, language: str) -> None:
-        '''
-        Display start menu: create/change/show entries or settings or logout or
-        quit.
-        '''
-
-        while True:
-            self.display_menu(company_name, language)
-            choice = choose_option(language)
-
-            if not self.choices.get(choice):
-                break
-            elif choice in self.choices:
-                action = self.choices.get(choice)
-                if action:
-                    action(conn, created_by, company_name, language)
-            else:
-                print(f"    {choice} ist keine zulässige Eingabe.")
-
-        conn.close()
-
-    def new_entry(self, conn: sqlite3.Connection, created_by: str,
-                  company_name: str, language: str) -> None:
-        menu = MenuNewEntry()
-        menu.run(conn, created_by, company_name, language)
-
-    def logout(self, conn: sqlite3.Connection, created_by: str,
-               logged_out_company_name: str, language: str) -> None:
-        conn.close()
-        main()
-
-    def change_entry(self, initial: str) -> None:
-        print(f"change entry by {initial}")
-
-    def search_entry(self, initial: str) -> None:
-        print(f"search entry by {initial}")
-
-    def settings(self, conn: sqlite3.Connection, initials: str,
-                 company_name: str, language: str) -> None:
-        menu = MenuSettings()
-        menu.run(conn, initials, company_name, language)
 
 
 def main():
     conn, language, company_name = initialize()
     login_menu = LoginMenu()
-    authenticated, created_by = login_menu.run(conn, language, company_name)  # noqa
+    authenticated, initials = login_menu.run(conn, language, company_name)  # noqa
     if authenticated:
-        menu = StartMenu()
-        menu.run(conn, created_by, company_name, language)
+        menu = MenuStart()
+        menu.run(conn, initials, company_name, language)
     else:
         main()
 

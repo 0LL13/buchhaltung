@@ -7,7 +7,7 @@ import datetime
 import sqlite3
 from dataclasses import dataclass
 from typing import Tuple
-from .constants import enter_person_prompt
+from .constants import enter_person_headline
 from .constants import menu_person_entry
 from .constants import languages
 from .helpers import clear_screen
@@ -63,8 +63,9 @@ class MenuNewPerson():
 
     def display_menu(self, company_name: str, language: str) -> None:
         global screen_cleared
+        headline = enter_person_headline[language]
 
-        menu_person_head = create_headline(company_name, language, prompt=enter_person_prompt)  # noqa
+        menu_person_head = create_headline(company_name, headline)
         if not screen_cleared:
             clear_screen()
             screen_cleared = True
@@ -95,22 +96,23 @@ class MenuNewPerson():
 
         return name
 
-    def enter_name(self, conn: sqlite3.Connection,
-                   created_by: str,
+    def enter_name(self, conn: sqlite3.Connection, created_by: str,
                    company_name: str,
                    language: str) -> Tuple[Name | None, int | None, str | None]:  # noqa
 
         # "company_name" is needed to display the company's name in MenuName
         menu = MenuName()
         name = menu.run(conn, created_by, company_name, language)  # format dataclass "Name"  # noqa
-        if name == (None, None):
-            # print("    No entries for enter_name")
+        if name is None:
+            return None, None, None
+        elif name == (None, None):
+            print("name is None, None")
             return None, None, None
         else:
             self.generate_table_persons(conn)
-            initials = self.add_person_to_db(conn, created_by, name, 2)
-            person_id = self.get_person_id(conn, initials)
-            menu.commit_name_to_db(conn, created_by, name, person_id)
+            initials = self.add_person_to_db(conn, created_by, name, 2)  # unique identifier  # noqa
+            person_id = self.get_person_id(conn, initials)  # foreign key
+            menu.commit_name_to_db(conn, created_by, name, person_id)  # needs foreign key  # noqa
             return name, person_id, initials
 
     def enter_titles(self) -> None:
@@ -135,7 +137,7 @@ class MenuNewPerson():
             conn.commit()
 
     def add_person_to_db(self, conn: sqlite3.Connection,
-                         created_by: str, name: Name, length: int) -> str:
+                         created_by: str, name: Name, length: int) -> str | None:  # noqa
         """
         Adding the basic data about a person and who created it. "initials"
         serves as the unique identifier.

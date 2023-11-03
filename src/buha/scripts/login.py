@@ -9,8 +9,10 @@ import sys
 from typing import Tuple
 from .constants import enter_initials
 from .constants import choose_option
-from .constants import login_prompt
-from .helpers import clear_screen
+from .constants import login_headline
+from .constants import login_menu
+from .constants import password_prompt
+from .shared import clear_screen
 from .helpers import create_headline
 
 
@@ -22,20 +24,15 @@ class LoginMenu():
 
     def display_menu(self, company_name: str, language: str) -> None:
         global screen_cleared
-        prompt = login_prompt[language]
-        menu_login_head = create_headline(company_name, language, prompt=prompt)  # noqa
+        headline = login_headline[language]
+        menu_login_head = create_headline(company_name, headline)  # noqa
 
         if not screen_cleared:
             clear_screen()
             screen_cleared = True
             print(menu_login_head)
 
-        login_menu = """
-    1: Login
-    2: Quit
-    """
-
-        print(login_menu)
+        print(login_menu[language])
 
     def run(self, conn: sqlite3.Connection, language: str,
             company_name: str) -> Tuple[bool, str]:
@@ -49,8 +46,7 @@ class LoginMenu():
             self.display_menu(company_name, language)
             choice = choose_option(language)
             if choice == "1":
-                authenticated, initials = login_employee(conn, language,
-                                                         company_name)
+                authenticated, initials = login_employee(conn, language, company_name)  # noqa
                 conn.commit()
                 break
             else:
@@ -70,7 +66,7 @@ def login_employee(conn: sqlite3.Connection, language: str,
     initials_validated = initials_in_table(conn, initials)
     if initials_validated:
         if is_internal(conn, initials):
-            password = getpass.getpass("    Enter password: ")
+            password = getpass.getpass(password_prompt[language])
             password_validated = password_correct(conn, initials, password)
             if password_validated:
                 return True, initials

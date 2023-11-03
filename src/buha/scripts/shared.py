@@ -7,7 +7,7 @@ import platform
 from dataclasses import dataclass, field
 from prettytable import PrettyTable
 from typing import Optional
-from .attr_dicts import german_attrs
+from .constants import german_attrs
 
 
 language = "de"
@@ -89,6 +89,8 @@ class AttrDisplay:
             if k in german_attrs:
                 german_key = german_attrs[k]
                 new_attrs[german_key] = attrs[k]
+            else:
+                print(f"{k} missing")
 
         return new_attrs
 

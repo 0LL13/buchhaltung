@@ -11,7 +11,14 @@ from operator import itemgetter
 from typing import Tuple
 from .constants import choose_option
 from .constants import menu_names_entry
-from .constants import name_particulars_prompt
+from .constants import name_particulars_headline
+from .constants import firstname_prompt
+from .constants import lastname_prompt
+from .constants import middlenames_prompt
+from .constants import nickname_prompt
+from .constants import maiden_prompt
+from .constants import salutation_prompt
+from .constants import enter_prompt
 from .helpers import clear_screen
 from .helpers import create_headline
 from .shared import Name
@@ -51,9 +58,9 @@ class MenuName():
 
     def display_menu(self, company_name: str, language: str) -> None:
         global screen_cleared
-        prompt = name_particulars_prompt[language]
+        headline = name_particulars_headline[language]
 
-        menu_names_head = create_headline(company_name, language, prompt=prompt)  # noqa
+        menu_names_head = create_headline(company_name, headline)  # noqa
         if not screen_cleared:
             clear_screen()
             screen_cleared = True
@@ -76,49 +83,61 @@ class MenuName():
                 action = self.choices.get(choice)
                 if action and choice == "8":
                     name = action(created_by, conn)
+                    if name is None:
+                        break
                     return name
                 elif action:
-                    action()
+                    action(language)
                 else:
                     print(f"{choice} is not a valid choice.")
 
         return None, None
 
-    def commit(self, conn: sqlite3.Connection, created_by: str) -> Tuple:
+    def commit(self, conn: sqlite3.Connection, created_by: str) -> Name | None:
+        global screen_cleared
+        screen_cleared = False
         name = self.generate_name_instance()
+        if name.first_name is None or name.last_name is None:
+            print("No valid name. Name needs first and last names.")
+            return None
         return name
 
-    def enter_firstname(self) -> None:
-        firstname = input("    First Name: ")
+    def enter_firstname(self, language: str) -> None:
+        firstname = enter_prompt(firstname_prompt, language)
         if not firstname.isalpha():
             firstname = self.enter_firstname()
         self.entries["fn"] = firstname
 
-    def enter_middlenames(self) -> None:
-        middlename = input("    Middle Name(s): ")
+    def enter_middlenames(self, language) -> None:
+        middlename = enter_prompt(middlenames_prompt, language)
         middlename = re.sub(" +", " ", middlename)
         if " " in middlename:
+            print("empty space in middlenames")
             for mn in middlename.split(" "):
                 if not mn.isalpha():
                     print("    Input must contain alphabetic characters only.")
                     choice = input("    Try again? y/N: ")
                     if choice == "y":
-                        middlename = self.enter_middlename()
+                        self.enter_middlenames(language)
                     else:
                         middlename = None
         elif not middlename.isalpha():
             print("    Input must contain alphabetic characters only.")
-            middlename = self.enter_middlename()
-        self.entries["mn"] = middlename
+            self.enter_middlenames(language)
+        else:
+            self.entries["mn"] = middlename
 
-    def enter_lastname(self) -> None:
-        lastname = input("    Last Name: ")
+        print("enter_middlenames: ", self.entries)
+        print("middlename: ", middlename)
+
+    def enter_lastname(self, language: str) -> None:
+        lastname = enter_prompt(lastname_prompt, language)
         if not lastname.isalpha():
             lastname = self.enter_lastname()
         self.entries["ln"] = lastname
 
-    def enter_nickname(self) -> None:
-        nickname = input("    Nickname: ")
+    def enter_nickname(self, language) -> None:
+        nickname = enter_prompt(nickname_prompt, language)
         if not nickname.isalnum():
             choice = input("    Try again? y/N: ")
             if choice == "y":
@@ -127,8 +146,8 @@ class MenuName():
                 nickname = None
         self.entries["nn"] = nickname
 
-    def enter_maidenname(self) -> None:
-        maidenname = input("    Maiden Name: ")
+    def enter_maidenname(self, language) -> None:
+        maidenname = enter_prompt(maiden_prompt, language)
         maidenname = re.sub(" +", " ", maidenname)
         if " " in maidenname:
             for mn in maidenname.split(" "):
@@ -141,8 +160,8 @@ class MenuName():
 
         self.entries["maiden"] = maidenname
 
-    def enter_generational_suffix(self) -> None:
-        suffix = input("    Generational Suffix: ")
+    def enter_generational_suffix(self, language) -> None:
+        suffix = enter_prompt(salutation_prompt, language)
         if suffix not in ["Jr.", "Sr.", "Jr", "Sr", "Jnr", "Snr", "I", "II", "III"]:  # noqa
             choice = input("    Try again? y/N: ")
             if choice == "y":
@@ -151,8 +170,8 @@ class MenuName():
                 suffix = None
         self.entries["suffix"] = suffix
 
-    def enter_salutation(self) -> None:
-        salutation = input("    Salutation: ")
+    def enter_salutation(self, language) -> None:
+        salutation = salutation_prompt(language)
         if salutation not in ["Herr", "Frau", "Fr.", "Hr."]:
             choice = input("    Try again? y/N: ")
             if choice == "y":
@@ -161,7 +180,7 @@ class MenuName():
                 salutation = None
         self.entries["salutation"] = salutation
 
-    def generate_name_instance(self) -> Tuple:
+    def generate_name_instance(self) -> Name:
         collected_entries = self.entries
         # see here about use of itemgetter:
         # https://stackoverflow.com/a/17755259/6597765
@@ -240,13 +259,17 @@ class MenuName():
 
         for name_tuple in names:
             fn, mn, ln = name_tuple[0], name_tuple[1], name_tuple[2]
+            if 0:
+                print(fn, mn, ln)
             if fn.lower() == name.first_name.lower():
                 if ln.lower() == name.last_name.lower():
                     double = "Entry with these first and last names already exists. Please add a middle name!"  # noqa
-                    if mn is None:
+                    if mn is None and name.middle_names is None:
                         print(double)
                         self.enter_middlenames()
-                        self.generate_name_instance()
+                        name = self.generate_name_instance()
                         return self.name_already_in_db(conn, name)
+                    elif mn is None and name.middle_names is not None:
+                        return False
                     else:
                         return mn.lower() == name.middle_names.lower()

@@ -6,7 +6,7 @@ import hashlib
 import os
 import sqlite3
 from typing import Tuple
-from .helpers import action_prompt
+from .constants import settings_headline
 from .helpers import clear_screen
 from .helpers import create_headline
 from .helpers import get_person_id
@@ -54,9 +54,10 @@ def add_settings(conn: sqlite3.Connection, created_by: str, language: str,
     timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
     password = "asd"
     salt, password_hash = hash_password(password)
-    # print("person_id: ", person_id)
-    if continue_():
-        pass
+    if 0:
+        print("person_id: ", person_id)
+        if continue_():
+            pass
 
     with conn:
         generate_table_settings(conn)
@@ -121,9 +122,9 @@ class MenuSettings():
 
     def display_menu(self, company_name: str, language: str) -> None:
         global screen_cleared
-        prompt = action_prompt[language]
+        headline = settings_headline[language]
 
-        menu_settings_head = create_headline(company_name, language, prompt=prompt)  # noqa
+        menu_settings_head = create_headline(company_name, headline)  # noqa
         if not screen_cleared:
             clear_screen()
             screen_cleared = True
