@@ -75,7 +75,7 @@ def path_to_database() -> Path:
     db_dir = cwd.parent / "data"
     db_path = db_dir.resolve()
     if 0:
-        print(str(db_path))
+        print("path to database: ", str(db_path))
     return db_path
 
 
@@ -130,8 +130,13 @@ def check_databases() -> list:
 
 
 def database_exists(company_name: str) -> bool:
-    path = path_to_database()
-    database_path = os.path.join(os.path.dirname(__file__), path + company_name)  # noqa
+    path = str(path_to_database()) + "/"
+    print(path)
+    cwd = os.path.dirname(__file__)
+    print(cwd)
+    database_path = os.path.join(cwd, path + company_name)  # noqa
+    print(database_path)
+    # database_path = os.path.join(os.path.dirname(__file__), path + company_name)  # noqa
     if not os.path.isfile(database_path):
         return False
     return True

@@ -92,11 +92,10 @@ def setup_new_db(language: str) -> Tuple[sqlite3.Connection, str, str]:
 
 
 def activate_database(company_name: str) -> sqlite3.Connection:
-    path = path_to_database()
-    db_path = path / company_name
+    db_path = path_to_database(company_name)
+    # db_path = path / company_name
     if 0:
         print("activate_database in main.py: ")
-        print("path: ", path)
         print("company_name: ", company_name)
         print("db_path: ", db_path)
     conn = sqlite3.connect(db_path)

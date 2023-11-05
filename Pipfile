@@ -16,6 +16,7 @@ pytest-sugar = "*"
 twine = "*"
 fuzzywuzzy = "*"
 levenshtein = "*"
+pytest-mock = "*"
 
 [dev-packages]
 
