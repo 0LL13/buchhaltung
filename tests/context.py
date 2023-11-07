@@ -11,18 +11,26 @@ sys.path.append(
     os.path.normpath(os.path.join(SCRIPT_DIR, PACKAGE_PARENT))
 )  # isort: skip # noqa # pylint: disable=wrong-import-position
 
+from buha.scripts import (  # type: ignore # isort:skip # noqa # pylint: disable=unused-import, wrong-import-position
+    helpers
+)  # pylint: disable=unused-import  # noqa
 
 from buha.scripts.helpers import (  # type: ignore # isort:skip # noqa # pylint: disable=unused-import, wrong-import-position
+    path_to_database_dir,
     path_to_database,
     check_databases,
     state_company,
     state_company_prompt,
-    database_exists,
 )  # pylint: disable=unused-import  # noqa
 
 
 from buha.scripts.constants import (  # type: ignore # isort:skip # noqa # pylint: disable=unused-import, wrong-import-position
     languages,
+)  # pylint: disable=unused-import  # noqa
+
+
+from buha.scripts.shared import (  # type: ignore # isort:skip # noqa # pylint: disable=unused-import, wrong-import-position
+    clear_screen,
 )  # pylint: disable=unused-import  # noqa
 
 

@@ -11,6 +11,7 @@ from .constants import german_attrs
 
 
 language = "de"
+screen_cleared = False
 
 
 def is_posix() -> bool:
@@ -21,10 +22,13 @@ def is_posix() -> bool:
 
 
 def clear_screen() -> None:
-    if is_posix():
-        os.system("clear")
-    else:
-        os.system("cls")
+    global screen_cleared
+    if not screen_cleared:
+        if is_posix():
+            os.system("clear")
+        else:
+            os.system("cls")
+    screen_cleared = True
 
 
 # ############## class definitions ############################################

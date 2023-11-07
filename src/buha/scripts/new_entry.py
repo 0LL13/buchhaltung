@@ -7,9 +7,7 @@ from .constants import new_entry_headline
 from .constants import choose_option
 from .helpers import clear_screen
 from .helpers import create_headline
-# from .helpers import is_internal
 from .person import MenuNewPerson
-# from .settings import add_settings
 
 
 screen_cleared = False
@@ -38,7 +36,6 @@ class MenuNewEntry():
 
         if not screen_cleared:
             clear_screen()
-            screen_cleared = True
             print(menu_new_entry_head)
 
         print(menu_new_entry_options[language])
@@ -65,10 +62,6 @@ class MenuNewEntry():
 
         menu = MenuNewPerson()
         menu.run(conn, created_by, company_name, language)
-#         name, person_id, initials = menu.enter_name(conn, created_by, company_name, language)  # noqa
-#         if (name, person_id, initials) != (None, None, None):
-#             internal = is_internal()
-#             add_settings(conn, created_by, language, person_id, initials, is_internal=internal)  # noqa
 
     def new_entity(self, conn: sqlite3.Connection, created_by: str,
                    company_name: str, language: str) -> None:

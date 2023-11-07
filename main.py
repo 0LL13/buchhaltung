@@ -8,14 +8,11 @@ from typing import Tuple
 from src.buha.scripts.helpers import check_databases  # looking for databases
 from src.buha.scripts.helpers import state_company
 from src.buha.scripts.helpers import path_to_database
-from src.buha.scripts.helpers import continue_
-from src.buha.scripts.helpers import show_table
 from src.buha.scripts.helpers import check_for_matches
 from src.buha.scripts.helpers import clear_screen
 from src.buha.scripts.start import MenuStart
 from src.buha.scripts.login import LoginMenu
 from src.buha.scripts.person import MenuNewPerson as NewPerson
-from src.buha.scripts.settings import add_settings
 
 
 """
@@ -49,16 +46,18 @@ def initialize() -> Tuple[sqlite3.Connection, str, str]:
     global screen_cleared
     if not screen_cleared:
         clear_screen()
-        screen_cleared = True
+
     targets = check_databases()  # returns list with databases
     # language can be changed in settings
     language = "de"
-    if targets == []:   # no database found
+    if targets == []:   # no database found --> first database
         conn, language, company_name = setup_new_db(language)
         return conn, language, company_name
     else:
         company_name = state_company(language)
+        # check for typos
         match = check_for_matches(company_name, targets, language)
+        # if difference too big --> different/new company
         if match is None:
             print("    Neue Firma.")
             conn, language, company_name = setup_new_db()
@@ -74,19 +73,7 @@ def setup_new_db(language: str) -> Tuple[sqlite3.Connection, str, str]:
     conn = activate_database(company_name)
     # first person of the company to be created
     new_person = NewPerson()
-    name, person_id, initials = new_person.enter_name(conn, created_by, company_name, language)  # noqa
-    # is_internal is True because this is the very first person to be created.
-    add_settings(conn, created_by, language, person_id, initials, is_internal=True)  # noqa
-
-    if 0:
-        print("show_persons")
-        show_table(conn, "persons")
-        print("show_names")
-        show_table(conn, "names")
-        print("show_settings")
-        show_table(conn, "settings")
-        if continue_():
-            pass
+    new_person.enter_name(conn, created_by, company_name, language)
 
     return conn, language, company_name
 
@@ -99,6 +86,7 @@ def activate_database(company_name: str) -> sqlite3.Connection:
         print("company_name: ", company_name)
         print("db_path: ", db_path)
     conn = sqlite3.connect(db_path)
+
     return conn
 
 

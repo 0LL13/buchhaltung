@@ -6,38 +6,18 @@ company's database of the same name as company."""
 import datetime
 import sqlite3
 from dataclasses import dataclass
-from typing import Tuple
 from .constants import enter_person_headline
 from .constants import menu_person_entry
-from .constants import languages
 from .helpers import clear_screen
 from .helpers import create_headline
 from .helpers import mk_initials
 from .helpers import show_table
 from .shared import Name
 from .names import MenuName
+from .settings import add_settings
 
 
 screen_cleared = False
-
-
-def pick_language() -> str:
-    pick_language_prompt = """
-    Welche Sprache? de
-    Which language? en
-    Quelle langue? fr
-    Que lenguaje? es
-    Quale lingua? it
-    Hangi dil? tr
-
-    --> """
-
-    language = input(pick_language_prompt)
-    if language not in languages:
-        print(f"Should be {languages}")
-        language = pick_language()
-
-    return language
 
 
 @dataclass
@@ -68,7 +48,6 @@ class MenuNewPerson():
         menu_person_head = create_headline(company_name, headline)
         if not screen_cleared:
             clear_screen()
-            screen_cleared = True
             print(menu_person_head)
 
         print(menu_person_entry[language])
@@ -76,7 +55,7 @@ class MenuNewPerson():
     def run(self, conn: sqlite3.Connection, created_by: str, company_name: str,
             language: str) -> str | None:
         """
-        "company_name" is only needed for the display of the company's name.
+        "company_name" is needed for the display of the company's name.
         """
         while True:
             self.display_menu(company_name, language)
@@ -97,23 +76,21 @@ class MenuNewPerson():
         return name
 
     def enter_name(self, conn: sqlite3.Connection, created_by: str,
-                   company_name: str,
-                   language: str) -> Tuple[Name | None, int | None, str | None]:  # noqa
+                   company_name: str, language: str) -> None:
 
         # "company_name" is needed to display the company's name in MenuName
         menu = MenuName()
         name = menu.run(conn, created_by, company_name, language)  # format dataclass "Name"  # noqa
         if name is None:
-            return None, None, None
+            return None
         elif name == (None, None):
-            print("name is None, None")
-            return None, None, None
+            return None
         else:
             self.generate_table_persons(conn)
             initials = self.add_person_to_db(conn, created_by, name, 2)  # unique identifier  # noqa
             person_id = self.get_person_id(conn, initials)  # foreign key
             menu.commit_name_to_db(conn, created_by, name, person_id)  # needs foreign key  # noqa
-            return name, person_id, initials
+            add_settings(conn, created_by, language, person_id, initials)
 
     def enter_titles(self) -> None:
         pass

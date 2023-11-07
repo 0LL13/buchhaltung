@@ -45,7 +45,6 @@ class MenuStart():
 
         if not screen_cleared:
             clear_screen()
-            screen_cleared = True
             print(menu_start_head)
 
         print(menu_start_options[language])

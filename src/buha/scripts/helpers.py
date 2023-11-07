@@ -70,12 +70,20 @@ def initials_in_table(conn: sqlite3.Connection, new_initials: str) -> bool:
 
 # ############## initialize database and activate #############################
 
-def path_to_database() -> Path:
+def path_to_database_dir() -> Path:
     cwd = Path(__file__).resolve().parent
     db_dir = cwd.parent / "data"
-    db_path = db_dir.resolve()
-    if 0:
-        print("path to database: ", str(db_path))
+    db_dir = db_dir.resolve()
+    return db_dir
+
+
+def path_to_database(db_name: str) -> Path:
+    # The name of the database will be the name of the company.
+    # A company name like "Becker KG" will become "Becker_KG.db"
+    db_dir = path_to_database_dir
+    db_path = db_dir / Path(db_name)
+    db_path = db_path.resolve()
+
     return db_path
 
 
@@ -117,29 +125,20 @@ def check_databases() -> list:
     """
     targets = []
 
-    # print("inside check_databases")
-    path_to_db = path_to_database()
-    for (dirpath, dirnames, filenames) in os.walk(path_to_db):
+    path_to_db_dir = path_to_database_dir()
+    for (dirpath, dirnames, filenames) in os.walk(path_to_db_dir):
         for filename in filenames:
             # print(filename)
             if filename.endswith(".db"):
                 targets.append(filename)
-    # print("check_databases, targets: ", targets)
 
     return targets
 
 
-def database_exists(company_name: str) -> bool:
-    path = str(path_to_database()) + "/"
-    print(path)
-    cwd = os.path.dirname(__file__)
-    print(cwd)
-    database_path = os.path.join(cwd, path + company_name)  # noqa
-    print(database_path)
-    # database_path = os.path.join(os.path.dirname(__file__), path + company_name)  # noqa
-    if not os.path.isfile(database_path):
-        return False
-    return True
+# def database_exists(company_name: str) -> bool:
+#     database_path = path_to_database(company_name)
+#
+#     return os.path.isfile(database_path)
 
 
 def pick_language() -> str:
@@ -186,7 +185,7 @@ def get_person_id(conn: sqlite3.Connection, initials: str) -> int:
         return person_id
 
 
-def is_internal() -> bool:
+def check_if_internal() -> bool:
     relation = input("    internal? y/N : ")
     if relation == "y":
         return True
@@ -202,6 +201,7 @@ def show_table(conn: sqlite3.Connection, table: str) -> None:
         res_table = res.fetchall()
         for row in res_table:
             print(row)
+        continue_()
 
 
 def show_all(conn: sqlite3.Connection, person_id: int) -> None:

@@ -12,8 +12,9 @@ from .helpers import create_headline
 from .helpers import get_person_id
 from .helpers import show_my_table
 from .helpers import continue_
+from .helpers import check_if_internal
+from .helpers import pick_language
 from .login import password_correct
-from .person import pick_language
 
 
 screen_cleared = False
@@ -46,13 +47,14 @@ def generate_table_settings(conn: sqlite3.Connection) -> None:
 
 
 def add_settings(conn: sqlite3.Connection, created_by: str, language: str,
-                 person_id: int, initials: str, is_internal: bool = False) -> None:  # noqa
+                 person_id: int, initials: str) -> None:
     add_settings = """INSERT INTO settings (
                       person_id, created_by, timestamp, language, initials,
                       is_internal, salt, password_hash)
                       VALUES (?, ?, ?, ?, ?, ?, ?, ?)"""
     timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
     password = "asd"
+    is_internal = check_if_internal()
     salt, password_hash = hash_password(password)
     if 0:
         print("person_id: ", person_id)

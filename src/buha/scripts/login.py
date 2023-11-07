@@ -29,7 +29,6 @@ class LoginMenu():
 
         if not screen_cleared:
             clear_screen()
-            screen_cleared = True
             print(menu_login_head)
 
         print(login_menu[language])
