@@ -70,18 +70,18 @@ def initials_in_table(conn: sqlite3.Connection, new_initials: str) -> bool:
 
 # ############## initialize database and activate #############################
 
-def path_to_database_dir() -> Path:
+def path_to_db_dir() -> Path:
     cwd = Path(__file__).resolve().parent
     db_dir = cwd.parent / "data"
     db_dir = db_dir.resolve()
-    return db_dir
+    return Path(db_dir)
 
 
 def path_to_database(db_name: str) -> Path:
     # The name of the database will be the name of the company.
     # A company name like "Becker KG" will become "Becker_KG.db"
-    db_dir = path_to_database_dir
-    db_path = db_dir / Path(db_name)
+    database_dir = path_to_db_dir()
+    db_path = database_dir / Path(db_name)
     db_path = db_path.resolve()
 
     return db_path
@@ -125,8 +125,8 @@ def check_databases() -> list:
     """
     targets = []
 
-    path_to_db_dir = path_to_database_dir()
-    for (dirpath, dirnames, filenames) in os.walk(path_to_db_dir):
+    path_to_database_dir = path_to_db_dir()
+    for (dirpath, dirnames, filenames) in os.walk(path_to_database_dir):
         for filename in filenames:
             # print(filename)
             if filename.endswith(".db"):

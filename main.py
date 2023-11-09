@@ -47,31 +47,33 @@ def initialize() -> Tuple[sqlite3.Connection, str, str]:
     if not screen_cleared:
         clear_screen()
 
-    targets = check_databases()  # returns list with databases
     # language can be changed in settings
     language = "de"
+    company_name = state_company(language)
+
+    targets = check_databases()  # returns list with databases
     if targets == []:   # no database found --> first database
-        conn, language, company_name = setup_new_db(language)
-        return conn, language, company_name
+        return setup_new_company(company_name, language)
     else:
-        company_name = state_company(language)
-        # check for typos
+        # check for typos -> return best match
         match = check_for_matches(company_name, targets, language)
+
         # if difference too big --> different/new company
         if match is None:
             print("    Neue Firma.")
-            conn, language, company_name = setup_new_db()
-            return conn, language, company_name
+            return setup_new_company(company_name, language)
+
         conn = activate_database(match)
         return conn, language, match
 
 
-def setup_new_db(language: str) -> Tuple[sqlite3.Connection, str, str]:
+def setup_new_company(company_name: str, language: str) -> Tuple[sqlite3.Connection, str, str]:  # noqa
     # database will be named after company
-    company_name = state_company(language)
-    created_by = getpass.getuser()
     conn = activate_database(company_name)
-    # first person of the company to be created
+
+    # Owner of PC does the first database entry
+    created_by = getpass.getuser()
+    # A first user needs to be created bc otherwise no access to db ...
     new_person = NewPerson()
     new_person.enter_name(conn, created_by, company_name, language)
 
@@ -80,7 +82,6 @@ def setup_new_db(language: str) -> Tuple[sqlite3.Connection, str, str]:
 
 def activate_database(company_name: str) -> sqlite3.Connection:
     db_path = path_to_database(company_name)
-    # db_path = path / company_name
     if 0:
         print("activate_database in main.py: ")
         print("company_name: ", company_name)

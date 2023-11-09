@@ -16,7 +16,7 @@ from buha.scripts import (  # type: ignore # isort:skip # noqa # pylint: disable
 )  # pylint: disable=unused-import  # noqa
 
 from buha.scripts.helpers import (  # type: ignore # isort:skip # noqa # pylint: disable=unused-import, wrong-import-position
-    path_to_database_dir,
+    path_to_db_dir,
     path_to_database,
     check_databases,
     state_company,
@@ -26,6 +26,11 @@ from buha.scripts.helpers import (  # type: ignore # isort:skip # noqa # pylint:
 
 from buha.scripts.constants import (  # type: ignore # isort:skip # noqa # pylint: disable=unused-import, wrong-import-position
     languages,
+)  # pylint: disable=unused-import  # noqa
+
+
+from buha.scripts.person import (  # type: ignore # isort:skip # noqa # pylint: disable=unused-import, wrong-import-position
+    MenuNewPerson as NewPerson,
 )  # pylint: disable=unused-import  # noqa
 
 
@@ -45,4 +50,6 @@ sys.path.append(
 
 from main import (  # type: ignore # isort:skip # noqa # pylint: disable=unused-import, wrong-import-position
     activate_database,
+    initialize,
+    setup_new_company,
 )  # pylint: disable=unused-import  # noqa

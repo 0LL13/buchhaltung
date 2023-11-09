@@ -1,0 +1,50 @@
+import pytest
+import sqlite3
+from pathlib import Path
+from unittest.mock import MagicMock
+from typing import Tuple
+
+# Your module's functions (mocked for demonstration purposes)
+def state_company(language: str) -> str:
+    # ... (original implementation)
+    pass
+
+def activate_database(company_name: str) -> sqlite3.Connection:
+    # ... (original implementation)
+    pass
+
+def setup_new_db(language: str) -> Tuple[sqlite3.Connection, str, str]:
+    # ... (original implementation)
+    pass
+
+def path_to_database(db_name: str) -> Path:
+    # ... (original implementation)
+    pass
+
+# Your pytest fixture and test function
+@pytest.fixture
+def setup_database():
+    company_name = "test_company.db"
+    conn = sqlite3.connect(":memory:")
+    yield conn, company_name
+    conn.close()
+
+def test_setup_new_db(tmp_path, monkeypatch):
+    # Patch the input to return 'test_company'
+    monkeypatch.setattr("builtins.input", lambda _: "test_company")
+
+    # Patch the path_to_database_dir to return the tmp_path fixture path
+    monkeypatch.setattr('your_module.path_to_database_dir', tmp_path)
+
+    # Patch path_to_database to return the tmp_path joined with the db name
+    monkeypatch.setattr('your_module.path_to_database', lambda db_name: tmp_path / db_name)
+
+    # Call the function under test
+    conn, language, company_name = setup_new_db("de")
+
+    # Assert conditions
+    assert isinstance(conn, sqlite3.Connection)
+    assert language == "de"
+    assert company_name == "test_company.db"
+    assert tmp_path in conn.dsn  # Check if the database connection is using the tmp_path
+
