@@ -43,9 +43,7 @@ def initialize() -> Tuple[sqlite3.Connection, str, str]:
         - if company_name doesn't fit create new database (start_new_db)
         - return sqlite3.Connection, language and company_name -> login
     """
-    global screen_cleared
-    if not screen_cleared:
-        clear_screen()
+    clear_screen()
 
     # language can be changed in settings
     language = "de"
@@ -82,10 +80,6 @@ def setup_new_company(company_name: str, language: str) -> Tuple[sqlite3.Connect
 
 def activate_database(company_name: str) -> sqlite3.Connection:
     db_path = path_to_database(company_name)
-    if 0:
-        print("activate_database in main.py: ")
-        print("company_name: ", company_name)
-        print("db_path: ", db_path)
     conn = sqlite3.connect(db_path)
 
     return conn
@@ -94,7 +88,7 @@ def activate_database(company_name: str) -> sqlite3.Connection:
 def main():
     conn, language, company_name = initialize()
     login_menu = LoginMenu()
-    authenticated, initials = login_menu.run(conn, language, company_name)  # noqa
+    authenticated, initials = login_menu.run(conn, language, company_name) 
     if authenticated:
         menu = MenuStart()
         menu.run(conn, initials, company_name, language)
