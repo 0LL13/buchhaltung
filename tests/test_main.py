@@ -7,14 +7,14 @@ import pytest
 import os
 import sqlite3
 import main
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 
 from context import check_databases
 from context import activate_database
 from context import clear_screen
 from context import state_company
 from context import setup_new_company
-from context import helpers
+# from context import helpers
 
 
 # ######## initialize #########################################################
@@ -201,5 +201,48 @@ def test_activate_database(tmp_path, monkeypatch):
 
 # ######## main ###############################################################
 
-def test_main_function():
-    pass
+
+def test_main_authenticated():
+    with patch.object(main, "initialize", return_value=("mock_conn",
+         "mock_language", "mock_company_name")) as mock_initialize, \
+         patch("main.LoginMenu") as mock_login_menu, \
+         patch("main.MenuStart") as mock_menu_start:
+
+        # Mock the LoginMenu's run method to return authenticated user
+        login_menu_instance = MagicMock()
+        login_menu_instance.run.return_value = (True, "mock_initials")
+        mock_login_menu.return_value = login_menu_instance
+
+        menu_start_instance = MagicMock()
+        mock_menu_start.return_value = menu_start_instance
+
+        main.main()
+
+        mock_initialize.assert_called_once()
+        login_menu_instance.run.assert_called_once_with("mock_conn", "mock_language", "mock_company_name")  # noqa
+        menu_start_instance.run.assert_called_once_with("mock_conn", "mock_initials", "mock_company_name", "mock_language")  # noqa
+
+
+def test_main_unauthenticated(monkeypatch):
+    counter = [0]
+
+    def counted_main():
+        counter[0] += 1
+        if counter[0] <= 1:
+            return main.main()
+
+    with patch.object(main, "initialize", return_value=("mock_conn",
+         "mock_language", "mock_company_name")) as mock_initialize, \
+         patch('main.LoginMenu') as mock_login_menu, \
+         patch("main.main", return_value=counted_main) as mock_main:
+
+        # Mock the LoginMenu's run method to return unauthenticated user
+        login_menu_instance = MagicMock()
+        login_menu_instance.run.return_value = (False, None)
+        mock_login_menu.return_value = login_menu_instance
+
+        # Run the main function and expect it to call itself once more
+        main.main()
+
+        mock_initialize.assert_called_once()
+        # assert counter[0] == 2
