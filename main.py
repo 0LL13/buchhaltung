@@ -3,6 +3,7 @@
 # main.py
 import getpass
 import sqlite3
+import sys
 from typing import Tuple
 
 from src.buha.scripts.helpers import check_databases  # looking for databases
@@ -93,7 +94,8 @@ def main():
         menu = MenuStart()
         menu.run(conn, initials, company_name, language)
     else:
-        main()
+        conn.close()
+        sys.exit() 
 
 
 if __name__ == "__main__":

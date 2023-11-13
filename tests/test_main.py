@@ -7,6 +7,7 @@ import pytest
 import os
 import sqlite3
 import main
+import getpass
 from unittest.mock import patch, MagicMock
 
 from context import check_databases
@@ -14,7 +15,6 @@ from context import activate_database
 from context import clear_screen
 from context import state_company
 from context import setup_new_company
-# from context import helpers
 
 
 # ######## initialize #########################################################
@@ -178,11 +178,20 @@ def test_existing_db_but_setup_new_db(tmp_path, mocker, monkeypatch, mock_conn):
 def test_setup_new_company(tmp_path, monkeypatch):
     monkeypatch.setattr("builtins.input", lambda _: "test company")
     monkeypatch.setattr("src.buha.scripts.helpers.path_to_db_dir", lambda: tmp_path)  # noqa
-    conn, language, company_name = setup_new_company("test_company.db", "de")
+    conn, language, company_name = setup_new_company("test_company.db", "de")  # noqa
 
     assert isinstance(conn, sqlite3.Connection)
     assert language == "de"
     assert company_name == "test_company.db"
+
+
+def test_setup_new_company_getuser(tmp_path, monkeypatch):
+    monkeypatch.setattr("builtins.input", lambda _: "mock company")
+    monkeypatch.setattr("src.buha.scripts.helpers.path_to_db_dir", lambda: tmp_path)  # noqa
+
+    with patch.object(getpass, "getuser", return_value="mock_user") as mock_getuser:  # noqa
+        conn, language, company_name = setup_new_company("mock_company.db", "de")  # noqa
+        mock_getuser.assert_called_once()
 
 
 # ######## activate_database ##################################################
@@ -192,6 +201,7 @@ def test_activate_database(tmp_path, monkeypatch):
     company_name = "test_activate_db.db"
     db_path = tmp_path / company_name
     monkeypatch.setattr("src.buha.scripts.helpers.path_to_db_dir", lambda: tmp_path)  # noqa
+
     if os.path.exists(db_path):
         assert False
     conn = activate_database(company_name)
@@ -224,25 +234,19 @@ def test_main_authenticated():
 
 
 def test_main_unauthenticated(monkeypatch):
-    counter = [0]
+    monkeypatch.setattr("sys.exit", lambda: None)
+    with patch("main.initialize",
+               return_value=(MagicMock(), "mock_language",
+                             "mock_company_name")) as mock_initialize, \
+         patch("main.LoginMenu") as mock_login_menu:
 
-    def counted_main():
-        counter[0] += 1
-        if counter[0] <= 1:
-            return main.main()
-
-    with patch.object(main, "initialize", return_value=("mock_conn",
-         "mock_language", "mock_company_name")) as mock_initialize, \
-         patch('main.LoginMenu') as mock_login_menu, \
-         patch("main.main", return_value=counted_main) as mock_main:
-
-        # Mock the LoginMenu's run method to return unauthenticated user
+        # Mock the LoginMenu's run method to return authenticated user
         login_menu_instance = MagicMock()
         login_menu_instance.run.return_value = (False, None)
         mock_login_menu.return_value = login_menu_instance
 
-        # Run the main function and expect it to call itself once more
         main.main()
 
         mock_initialize.assert_called_once()
-        # assert counter[0] == 2
+        mock_initialize.return_value[0].close.assert_called_once()
+        login_menu_instance.run.assert_called_once()

@@ -34,6 +34,11 @@ from buha.scripts.person import (  # type: ignore # isort:skip # noqa # pylint: 
 )  # pylint: disable=unused-import  # noqa
 
 
+from buha.scripts.login import (  # type: ignore # isort:skip # noqa # pylint: disable=unused-import, wrong-import-position
+    LoginMenu,
+)  # pylint: disable=unused-import  # noqa
+
+
 from buha.scripts.shared import (  # type: ignore # isort:skip # noqa # pylint: disable=unused-import, wrong-import-position
     clear_screen,
 )  # pylint: disable=unused-import  # noqa
