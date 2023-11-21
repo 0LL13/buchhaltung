@@ -6,18 +6,14 @@ company's database of the same name as company."""
 import datetime
 import sqlite3
 from dataclasses import dataclass
-from .constants import enter_person_headline
-from .constants import menu_person_entry
-from .helpers import clear_screen
-from .helpers import create_headline
+from .constants import choose_option
+from .helpers import Menu
 from .helpers import mk_initials
 from .helpers import show_table
-from .shared import Name
 from .names import MenuName
 from .settings import add_settings
-
-
-screen_cleared = False
+from .shared import Name
+# from .shared import clear_screen
 
 
 @dataclass
@@ -29,10 +25,13 @@ class Person():
     last_name: str
 
 
-class MenuNewPerson():
+class MenuNewPerson(Menu):
     """Menu to enter name and particulars of a person."""
 
     def __init__(self):
+        super().__init__()
+        super().change_menu("person")
+
         self.choices = {
             "1": self.enter_name,
             "2": self.enter_titles,
@@ -41,25 +40,16 @@ class MenuNewPerson():
             "9": False,
         }
 
-    def display_menu(self, company_name: str, language: str) -> None:
-        global screen_cleared
-        headline = enter_person_headline[language]
-
-        menu_person_head = create_headline(company_name, headline)
-        if not screen_cleared:
-            clear_screen()
-            print(menu_person_head)
-
-        print(menu_person_entry[language])
+    def display_menu(self, company_name: str, language: str,
+                     task: str = "person") -> None:
+        super().display_menu(company_name, language, task=task)
 
     def run(self, conn: sqlite3.Connection, created_by: str, company_name: str,
             language: str) -> str | None:
-        """
-        "company_name" is needed for the display of the company's name.
-        """
+
         while True:
-            self.display_menu(company_name, language)
-            choice = input("    Option wählen: ")
+            self.display_menu(company_name, language, task="person")
+            choice = choose_option(language)
             if not self.choices.get(choice):
                 name = None
                 break
@@ -69,10 +59,10 @@ class MenuNewPerson():
                     action(conn, "persons")
                 elif action:
                     name = action(conn, created_by, company_name, language)
-                    # commit_to_db(name, names_key)
                 else:
                     print(f"    {choice} ist keine zulässige Eingabe.")
 
+        super().go_back()
         return name
 
     def enter_name(self, conn: sqlite3.Connection, created_by: str,
@@ -82,14 +72,16 @@ class MenuNewPerson():
         menu = MenuName()
         name = menu.run(conn, created_by, company_name, language)  # format dataclass "Name"  # noqa
         if name is None:
+            super().go_back()
             return None
         elif name == (None, None):
+            super().go_back()
             return None
         else:
             self.generate_table_persons(conn)
             initials = self.add_person_to_db(conn, created_by, name, 2)  # unique identifier  # noqa
             person_id = self.get_person_id(conn, initials)  # foreign key
-            menu.commit_name_to_db(conn, created_by, name, person_id)  # needs foreign key  # noqa
+            menu.commit_name_to_db(conn, created_by, name, person_id, language)  # needs foreign key  # noqa
             add_settings(conn, created_by, language, person_id, initials)
 
     def enter_titles(self) -> None:

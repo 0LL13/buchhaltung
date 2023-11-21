@@ -2,21 +2,17 @@
 # -*- coding: utf-8 -*-
 # new_entry.py
 import sqlite3
-from .constants import menu_new_entry_options
-from .constants import new_entry_headline
 from .constants import choose_option
-from .helpers import clear_screen
-from .helpers import create_headline
 from .person import MenuNewPerson
+from .helpers import Menu
 
 
-screen_cleared = False
-
-
-class MenuNewEntry():
+class MenuNewEntry(Menu):
     """Menu options for adding a new entry."""
 
     def __init__(self):
+        super().__init__()
+        super().change_menu("new entry")
 
         self.choices = {
             "1": self.new_person,
@@ -29,23 +25,16 @@ class MenuNewEntry():
             "9": False
         }
 
-    def display_menu(self, company_name: str, language: str) -> None:
-        global screen_cleared
-        headline = new_entry_headline[language]
-        menu_new_entry_head = create_headline(company_name, headline)
-
-        if not screen_cleared:
-            clear_screen()
-            print(menu_new_entry_head)
-
-        print(menu_new_entry_options[language])
+    def display_menu(self, company_name: str, language: str,
+                     task="new entry") -> None:
+        super().display_menu(company_name, language, task=task)
 
     def run(self, conn: sqlite3.Connection, created_by: str,
             company_name: str, language: str) -> None:
 
         # "created_by" are the initials of the person working with the program
         while True:
-            self.display_menu(company_name, language)
+            self.display_menu(company_name, language, task="new entry")
             choice = choose_option(language)
 
             if not self.choices.get(choice):
@@ -56,6 +45,7 @@ class MenuNewEntry():
                     action(conn, created_by, company_name, language)
             else:
                 print(f"    {choice} is not a valid choice.")
+        super().go_back()
 
     def new_person(self, conn: sqlite3.Connection, created_by: str,
                    company_name: str, language: str) -> None:

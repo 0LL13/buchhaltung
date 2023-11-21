@@ -6,43 +6,30 @@ import hashlib
 import os
 import sqlite3
 import sys
+
 from typing import Tuple
+
 from .constants import enter_initials
 from .constants import choose_option
-from .constants import login_headline
-from .constants import login_menu
 from .constants import password_prompt
-from .shared import clear_screen
-from .helpers import create_headline
+from .helpers import Menu
 
 
-screen_cleared = False
-
-
-class LoginMenu():
+class LoginMenu(Menu):
     """Menu options for starting buha."""
+    def __init__(self):
+        super().__init__()
+        super().change_menu("login")
 
-    def display_menu(self, company_name: str, language: str) -> None:
-        global screen_cleared
-        headline = login_headline[language]
-        menu_login_head = create_headline(company_name, headline)  # noqa
-
-        if not screen_cleared:
-            clear_screen()
-            print(menu_login_head)
-
-        print(login_menu[language])
+    def display_menu(self, company_name: str, language: str,
+                     task: str = "login") -> None:
+        super().display_menu(company_name, language, task=task)
 
     def run(self, conn: sqlite3.Connection, language: str,
             company_name: str) -> Tuple[bool, str]:
-        """
-        Display login menu: login or quit.
-        Needs "company_name" for the head of menu, "language" for its language,
-        and "conn".
-        Logout closes connection and exits.
-        """
+
         while True:
-            self.display_menu(company_name, language)
+            self.display_menu(company_name, language, task="login")
             choice = choose_option(language)
             if choice == "1":
                 authenticated, initials = login_employee(conn, language, company_name)  # noqa
@@ -54,6 +41,7 @@ class LoginMenu():
                 conn.close()
                 sys.exit()
 
+        super().go_back()
         return authenticated, initials
 
 

@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 # helpers.py
 """Helper functions: exceptions, print style, ..."""
+import inspect
 import os
 import re
 import sqlite3
@@ -9,8 +10,85 @@ import sys
 from fuzzywuzzy import fuzz
 from pathlib import Path
 from .constants import state_company_prompt
+from .constants import task_headline
+from .constants import task_menu
 from .shared import Name
 from .shared import clear_screen
+
+
+# ############## class definitions ############################################
+
+class Menu:
+    last_caller_module = None
+
+    def __init__(self):
+        # self.last_caller_module = None
+        self.navigation_stack = []
+
+    def menu_changed(self) -> bool:
+        if self.get_caller_module_name() != "src.buha.scripts.helpers":
+            current_caller_module = self.get_caller_module_name()
+        else:
+            current_caller_module = Menu.last_caller_module
+        current_menu = self.navigation_stack[-1] if self.navigation_stack else None  # noqa
+        if current_caller_module != Menu.last_caller_module:
+            print("current module: ", current_caller_module)
+            print("last module in menu_changed: ", Menu.last_caller_module)
+            continue_()
+            Menu.last_caller_module = current_caller_module
+            return True
+        else:
+            try:
+                if (self.navigation_stack and current_menu != self.navigation_stack[-2]):  # noqa
+                    Menu.last_caller_module = current_caller_module
+                    return True
+            except IndexError:
+                if len(self.navigation_stack) == 1:
+                    Menu.last_caller_module = current_caller_module
+                    return True
+
+        Menu.last_caller_module = current_caller_module
+        return False
+
+    def print_headline(self, company_name: str, language: str, task: str) -> None:  # noqa
+        headline = task_headline(task, language)
+        menu_task_head = create_headline(company_name, headline)  # noqa
+        print(menu_task_head)
+
+    def change_menu(self, task: str):
+        print("change_menu, before: ", self.navigation_stack)
+        self.navigation_stack.append(task)
+        print("change_menu, after: ", self.navigation_stack)
+
+        print("last module before change_menu: ", Menu.last_caller_module)
+        Menu.last_caller_module = self.get_caller_module_name()
+        print("last module after change_menu: ", Menu.last_caller_module)
+
+    def go_back(self):
+        if self.navigation_stack:
+            print("go_back navi stack before: ", self.navigation_stack)
+            self.navigation_stack.pop()
+            print("go_back navi stack after: ", self.navigation_stack)
+        print("go back last_caller_module before: ", Menu.last_caller_module)
+        self.last_caller_module = self.get_caller_module_name()
+        print("go back last_caller_module after: ", Menu.last_caller_module)
+
+    def get_caller_module_name(self) -> str:
+        # Gets the caller's module name. The index 2 refers to the caller of
+        # the current function.
+        frame = inspect.stack()[2]
+        module = inspect.getmodule(frame[0])
+        return module.__name__ if module else None
+
+    def display_menu(self, company_name: str, language: str,
+                     task: str = "") -> None:
+        # with "task" being the actual "what": a new entry, login, ...
+        self.navigation_stack.append(task)
+
+        if self.menu_changed():
+            clear_screen()
+            self.print_headline(company_name, language, task)
+        print(task_menu(task, language))
 
 
 # ############## headline generator ###########################################

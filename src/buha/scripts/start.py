@@ -2,11 +2,8 @@
 # -*- coding: utf-8 -*-
 # start.py
 import sqlite3
-from .constants import menu_start_options
-from .constants import start_headline
 from .constants import choose_option
-from .helpers import clear_screen
-from .helpers import create_headline
+from .helpers import Menu
 from .login import LoginMenu
 from .new_entry import MenuNewEntry
 from .settings import MenuSettings
@@ -21,13 +18,12 @@ bank_details: name_of_bank, IBAN, BLZ, BIC, account_nr, key
 """
 
 
-screen_cleared = False
-
-
-class MenuStart():
+class MenuStart(Menu):
     """Menu options for adding a new entry."""
 
     def __init__(self):
+        super().__init__()
+        super().change_menu("start")
 
         self.choices = {
             "1": self.new_entry,
@@ -38,23 +34,15 @@ class MenuStart():
             "9": False
         }
 
-    def display_menu(self, company_name: str, language: str) -> None:
-        global screen_cleared
-        headline = start_headline[language]
-        menu_start_head = create_headline(company_name, headline)  # noqa
-
-        if not screen_cleared:
-            clear_screen()
-            print(menu_start_head)
-
-        print(menu_start_options[language])
+    def display_menu(self, company_name: str, language: str,
+                     task: str = "start") -> None:
+        super().display_menu(company_name, language, task=task)
 
     def run(self, conn: sqlite3.Connection, created_by: str,
             company_name: str, language: str) -> None:
 
-        # "created_by" are the initials of the person working with the program
         while True:
-            self.display_menu(company_name, language)
+            self.display_menu(company_name, language, task="start")
             choice = choose_option(language)
 
             if not self.choices.get(choice):
@@ -65,6 +53,7 @@ class MenuStart():
                     action(conn, created_by, company_name, language)
             else:
                 print(f"    {choice} is not a valid choice.")
+        super().go_back()
 
     def new_entry(self, conn: sqlite3.Connection, created_by: str,
                   company_name: str, language: str) -> None:

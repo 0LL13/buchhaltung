@@ -6,7 +6,32 @@
 from typing import Callable
 
 
-# ######### import -> all modules with menus ##################################
+# ######### import -> all modules with menus - helpers.py #####################
+
+def task_headline(task: str, language: str) -> str:
+    headlines = {
+        "main": main_headline,
+        "login": login_headline,
+        "settings": settings_headline,
+        "new entry": new_entry_headline,
+        "person": person_headline,
+        "start": start_headline,
+        "names": names_headline,
+    }
+    return headlines[task][language]
+
+
+def task_menu(task: str, language: str) -> str:
+    menu = {
+        "login": login_menu,
+        "settings": settings_menu,
+        "new entry": new_entry_menu,
+        "person": person_menu,
+        "start": start_menu,
+        "names": names_menu,
+    }
+    return menu[task][language]
+
 
 def choose_option(language: str) -> Callable:
     prompt = {
@@ -14,6 +39,14 @@ def choose_option(language: str) -> Callable:
         "de": "    Eingabe wählen: "
     }
     return input(prompt[language])
+
+
+# ######## import -> main.py ##################################################
+
+main_headline = {
+    "en": "A small-scale accounting programm",
+    "de": "Ein Buchhaltungsprogramm für kleine Unternehmen",
+}
 
 
 # ######## import -> login.py #################################################
@@ -42,18 +75,38 @@ login_menu["de"] = """
     """
 
 
-# ######### import -> names.py ################################################
+# ######### import -> settings.py #############################################
 
 settings_headline = {
     "en": "SETTINGS MENU",
     "de": "MENÜ EINSTELLUNGEN",
 }
 
+settings_menu = dict()
+settings_menu["en"] = """
+    1: Change language
+    2: Change password
+    3: Show my settings
+    9: Back
+    """
+
+settings_menu["de"] = """
+    1: Sprache wählen
+    2: Passwort ändern
+    3: Einstellungen anzeigen
+    9: Zurück
+"""
+
 
 # ######### import -> names.py ################################################
 
-menu_names_entry = dict()
-menu_names_entry["en"] = """
+names_headline = {
+    "en": "NAME ENTRIES",
+    "de": "NAMENSEINTRÄGE",
+}
+
+names_menu = dict()
+names_menu["en"] = """
     Fields with (*) are obligatory
 
     1: (*) First Name
@@ -67,7 +120,7 @@ menu_names_entry["en"] = """
     9: Back
     """
 
-menu_names_entry["de"] = """
+names_menu["de"] = """
     Felder mit (*) sind Pflichtfelder
 
     1: (*) Vorname
@@ -133,8 +186,8 @@ new_entry_headline = {
     "de": "NEUER EINTRAG",
 }
 
-menu_new_entry_options = dict()
-menu_new_entry_options["en"] = """
+new_entry_menu = dict()
+new_entry_menu["en"] = """
     1: Person
     2: Entity (company, bank, ...)
     3: Object (tools, wares, ...)
@@ -145,7 +198,7 @@ menu_new_entry_options["en"] = """
     9: Back
     """
 
-menu_new_entry_options["de"] = """
+new_entry_menu["de"] = """
     1: Person
     2: Unternehmen (Firma, Bank, ...)
     3: Objekt (Werkzeuge, Waren, ...)
@@ -158,7 +211,7 @@ menu_new_entry_options["de"] = """
 
 # ######## import -> person.py ################################################
 
-enter_person_headline = {
+person_headline = {
     "de": "PERSONENEINTRAG",
     "it": "INGRESSO DELLA PERSONA",
     "es": "ENTRADA DE PERSONA",
@@ -169,15 +222,15 @@ enter_person_headline = {
 
 languages = ["de", "en", "fr", "es", "it", "tr"]
 
-menu_person_entry = dict()
-menu_person_entry["de"] = """
+person_menu = dict()
+person_menu["de"] = """
     1: Name
     2: Titel
     3: Zusätzliche persönliche Daten
     4: Personen zeigen
     9: Zurück
     """
-menu_person_entry["en"] = """
+person_menu["en"] = """
     1: Name
     2: Titles
     3: Additional particulars
@@ -210,8 +263,8 @@ state_company_prompt = {
 
 # ######## import -> start.py #################################################
 
-menu_start_options = dict()
-menu_start_options["de"] = """
+start_menu = dict()
+start_menu["de"] = """
     1: Neuer Eintrag
     2: Eintrag ändern
     3: Eintrag suchen
@@ -220,7 +273,7 @@ menu_start_options["de"] = """
     9: Beenden
     """
 
-menu_start_options["en"] = """
+start_menu["en"] = """
     1: New entry
     2: Change entry
     3: Search entry

@@ -10,8 +10,6 @@ import sqlite3
 from operator import itemgetter
 from typing import Tuple
 from .constants import choose_option
-from .constants import menu_names_entry
-from .constants import name_particulars_headline
 from .constants import firstname_prompt
 from .constants import lastname_prompt
 from .constants import middlenames_prompt
@@ -19,18 +17,17 @@ from .constants import nickname_prompt
 from .constants import maiden_prompt
 from .constants import salutation_prompt
 from .constants import enter_prompt
-from .helpers import clear_screen
-from .helpers import create_headline
+from .helpers import Menu
 from .shared import Name
 
 
-screen_cleared = False
-
-
-class MenuName():
+class MenuName(Menu):
     """Menu to enter the names of a contact."""
 
     def __init__(self):
+        super().__init__()
+        super().change_menu("names")
+
         self.entries = {
             "fn": None,
             "mn": None,
@@ -56,17 +53,9 @@ class MenuName():
     def reset_entries(self):
         self.entries = {key: None for key in self.entries}
 
-    def display_menu(self, company_name: str, language: str) -> None:
-        global screen_cleared
-        headline = name_particulars_headline[language]
-
-        menu_names_head = create_headline(company_name, headline)  # noqa
-        if not screen_cleared:
-            clear_screen()
-            screen_cleared = True
-            print(menu_names_head)
-
-        print(menu_names_entry[language])
+    def display_menu(self, company_name: str, language: str,
+                     task: str = "names") -> None:
+        super().display_menu(company_name, language, task=task)
 
     def run(self, conn: sqlite3.Connection, created_by: str, company_name: str,
             language: str) -> Tuple[str | None, str | None]:
@@ -75,31 +64,35 @@ class MenuName():
         the data in new instance of Name."""
 
         while True:
-            self.display_menu(company_name, language)
+            self.display_menu(company_name, language, task="names")
             choice = choose_option(language)
             if not self.choices.get(choice):
                 break
             else:
                 action = self.choices.get(choice)
                 if action and choice == "8":
-                    name = action(created_by, conn)
+                    name = action(created_by, conn, language)
                     if name is None:
-                        break
+                        pass
+                    super().go_back()
                     return name
                 elif action:
                     action(language)
                 else:
                     print(f"{choice} is not a valid choice.")
 
+        super().go_back()
         return None, None
 
-    def commit(self, conn: sqlite3.Connection, created_by: str) -> Name | None:
-        global screen_cleared
-        screen_cleared = False
+    def commit(self, conn: sqlite3.Connection, created_by: str,
+               language: str) -> Name | None:
         name = self.generate_name_instance()
         if name.first_name is None or name.last_name is None:
             print("No valid name. Name needs first and last names.")
+            super().go_back()
             return None
+
+        super().go_back()
         return name
 
     def enter_firstname(self, language: str) -> None:
@@ -218,9 +211,9 @@ class MenuName():
             conn.commit()
 
     def commit_name_to_db(self, conn: sqlite3.Connection, created_by: str,
-                          name: Name, person_id: int) -> None:
+                          name: Name, person_id: int, language) -> None:
         self.generate_table_names(conn)
-        if not self.name_already_in_db(conn, name):
+        if not self.name_already_in_db(conn, name, language):
             self.add_name_to_db(conn, created_by, name, person_id)
             self.reset_entries()
         else:
@@ -250,7 +243,8 @@ class MenuName():
                                    name.salutation))
             conn.commit()
 
-    def name_already_in_db(self, conn: sqlite3.Connection, name: Name) -> bool:
+    def name_already_in_db(self, conn: sqlite3.Connection, name: Name,
+                           language) -> bool:
         select_names = "SELECT first_name, middle_names, last_name FROM names"
         with conn:
             cur = conn.cursor()
@@ -266,7 +260,7 @@ class MenuName():
                     double = "Entry with these first and last names already exists. Please add a middle name!"  # noqa
                     if mn is None and name.middle_names is None:
                         print(double)
-                        self.enter_middlenames()
+                        self.enter_middlenames(language)
                         name = self.generate_name_instance()
                         return self.name_already_in_db(conn, name)
                     elif mn is None and name.middle_names is not None:

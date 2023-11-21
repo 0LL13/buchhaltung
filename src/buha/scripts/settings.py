@@ -6,18 +6,14 @@ import hashlib
 import os
 import sqlite3
 from typing import Tuple
-from .constants import settings_headline
-from .helpers import clear_screen
-from .helpers import create_headline
-from .helpers import get_person_id
-from .helpers import show_my_table
-from .helpers import continue_
+from .constants import choose_option
 from .helpers import check_if_internal
+from .helpers import continue_
+from .helpers import get_person_id
+from .helpers import Menu
 from .helpers import pick_language
+from .helpers import show_my_table
 from .login import password_correct
-
-
-screen_cleared = False
 
 
 def generate_table_settings(conn: sqlite3.Connection) -> None:
@@ -110,10 +106,12 @@ def hash_password(password: str) -> Tuple[str, str]:
     return salt, password_hash
 
 
-class MenuSettings():
+class MenuSettings(Menu):
     """Menu options for adding a new entry."""
 
     def __init__(self):
+        super().__init__()
+        super().change_menu("settings")
 
         self.choices = {
             "1": self.change_language,
@@ -122,31 +120,16 @@ class MenuSettings():
             "9": False
         }
 
-    def display_menu(self, company_name: str, language: str) -> None:
-        global screen_cleared
-        headline = settings_headline[language]
-
-        menu_settings_head = create_headline(company_name, headline)  # noqa
-        if not screen_cleared:
-            clear_screen()
-            screen_cleared = True
-            print(menu_settings_head)
-
-        menu_change_settings = """
-    1: Change language
-    2: Change password
-    3: Show my settings
-    9: Back
-    """
-
-        print(menu_change_settings)
+    def display_menu(self, company_name: str, language: str,
+                     task="settings") -> None:
+        super().display_menu(company_name, language, task=task)
 
     def run(self, conn: sqlite3.Connection, initials: str,
             company_name: str, language: str) -> None:
 
         while True:
-            self.display_menu(company_name, language)
-            choice = input("    Enter an option: ")
+            self.display_menu(company_name, language, task="settings")
+            choice = choose_option(language)
 
             if not self.choices.get(choice):
                 break
@@ -162,6 +145,7 @@ class MenuSettings():
             else:
                 print(f"    {choice} is not a valid choice.")
 
+        super().go_back()
         return None
 
     def change_language(self, conn: sqlite3.Connection, initials: str) -> None:

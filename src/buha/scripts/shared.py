@@ -4,9 +4,11 @@
 """Shared class definitions to avoid circular import issues."""
 import os
 import platform
+
 from dataclasses import dataclass, field
 from prettytable import PrettyTable
 from typing import Optional
+
 from .constants import german_attrs
 
 
@@ -22,16 +24,10 @@ def is_posix() -> bool:
 
 
 def clear_screen() -> None:
-    global screen_cleared
-    if not screen_cleared:
-        if is_posix():
-            os.system("clear")
-        else:
-            os.system("cls")
-    screen_cleared = True
+    os.system("clear" if is_posix() else "cls")
 
 
-# ############## class definitions ############################################
+# ######## class AttrDisplay ##################################################
 
 class AttrDisplay:
     """
@@ -98,6 +94,8 @@ class AttrDisplay:
 
         return new_attrs
 
+
+# ######## class Name #########################################################
 
 @dataclass
 class _Name_default:

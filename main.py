@@ -6,14 +6,15 @@ import sqlite3
 import sys
 from typing import Tuple
 
-from src.buha.scripts.helpers import check_databases  # looking for databases
+from src.buha.scripts.helpers import check_databases
 from src.buha.scripts.helpers import state_company
 from src.buha.scripts.helpers import path_to_database
 from src.buha.scripts.helpers import check_for_matches
 from src.buha.scripts.helpers import clear_screen
-from src.buha.scripts.start import MenuStart
+from src.buha.scripts.helpers import Menu
 from src.buha.scripts.login import LoginMenu
 from src.buha.scripts.person import MenuNewPerson as NewPerson
+from src.buha.scripts.start import MenuStart
 
 
 """
@@ -48,6 +49,14 @@ def initialize() -> Tuple[sqlite3.Connection, str, str]:
 
     # language can be changed in settings
     language = "de"
+    company_name = "BuHa   "  # last three chars will be cut off, usually .db
+    task = "main"
+
+    menu = Menu()
+    menu.change_menu("main")
+    menu.print_headline(company_name, language, task)
+    print()
+
     company_name = state_company(language)
 
     targets = check_databases()  # returns list with databases
@@ -89,13 +98,13 @@ def activate_database(company_name: str) -> sqlite3.Connection:
 def main():
     conn, language, company_name = initialize()
     login_menu = LoginMenu()
-    authenticated, initials = login_menu.run(conn, language, company_name) 
+    authenticated, initials = login_menu.run(conn, language, company_name)
     if authenticated:
         menu = MenuStart()
         menu.run(conn, initials, company_name, language)
     else:
         conn.close()
-        sys.exit() 
+        sys.exit()
 
 
 if __name__ == "__main__":
