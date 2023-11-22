@@ -72,11 +72,10 @@ class MenuName(Menu):
                 action = self.choices.get(choice)
                 if action and choice == "8":
                     name = action(created_by, conn, language)
-                    if name is None:
-                        pass
                     super().go_back()
                     return name
                 elif action:
+                    super().change_menu("names")
                     action(language)
                 else:
                     print(f"{choice} is not a valid choice.")

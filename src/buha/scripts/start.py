@@ -73,5 +73,6 @@ class MenuStart(Menu):
 
     def logout(self, conn: sqlite3.Connection, initials: str,
                company_name: str, language: str) -> None:
+        super().navigation_stack = []
         login_menu = LoginMenu()
         authenticated, initials = login_menu.run(conn, language, company_name)

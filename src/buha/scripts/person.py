@@ -71,10 +71,7 @@ class MenuNewPerson(Menu):
         # "company_name" is needed to display the company's name in MenuName
         menu = MenuName()
         name = menu.run(conn, created_by, company_name, language)  # format dataclass "Name"  # noqa
-        if name is None:
-            super().go_back()
-            return None
-        elif name == (None, None):
+        if name in [None, (None, None)]:
             super().go_back()
             return None
         else:
@@ -83,6 +80,7 @@ class MenuNewPerson(Menu):
             person_id = self.get_person_id(conn, initials)  # foreign key
             menu.commit_name_to_db(conn, created_by, name, person_id, language)  # needs foreign key  # noqa
             add_settings(conn, created_by, language, person_id, initials)
+            super().change_menu("person")
 
     def enter_titles(self) -> None:
         pass

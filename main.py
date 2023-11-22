@@ -26,9 +26,6 @@ picked their company.
 """
 
 
-screen_cleared = False
-
-
 def initialize() -> Tuple[sqlite3.Connection, str, str]:
     """
     - check if database exists
@@ -53,7 +50,6 @@ def initialize() -> Tuple[sqlite3.Connection, str, str]:
     task = "main"
 
     menu = Menu()
-    menu.change_menu("main")
     menu.print_headline(company_name, language, task)
     print()
 
@@ -81,6 +77,7 @@ def setup_new_company(company_name: str, language: str) -> Tuple[sqlite3.Connect
 
     # Owner of PC does the first database entry
     created_by = getpass.getuser()
+
     # A first user needs to be created bc otherwise no access to db ...
     new_person = NewPerson()
     new_person.enter_name(conn, created_by, company_name, language)
@@ -97,6 +94,7 @@ def activate_database(company_name: str) -> sqlite3.Connection:
 
 def main():
     conn, language, company_name = initialize()
+
     login_menu = LoginMenu()
     authenticated, initials = login_menu.run(conn, language, company_name)
     if authenticated:
