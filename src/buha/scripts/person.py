@@ -13,7 +13,6 @@ from .helpers import show_table
 from .names import MenuName
 from .settings import add_settings
 from .shared import Name
-# from .shared import clear_screen
 
 
 @dataclass

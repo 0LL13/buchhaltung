@@ -11,6 +11,7 @@ from src.buha.scripts.helpers import state_company
 from src.buha.scripts.helpers import path_to_database
 from src.buha.scripts.helpers import check_for_matches
 from src.buha.scripts.helpers import clear_screen
+from src.buha.scripts.helpers import continue_
 from src.buha.scripts.helpers import Menu
 from src.buha.scripts.login import LoginMenu
 from src.buha.scripts.person import MenuNewPerson as NewPerson
@@ -97,6 +98,9 @@ def main():
 
     login_menu = LoginMenu()
     authenticated, initials = login_menu.run(conn, language, company_name)
+    if 0:
+        print("initials: ", initials)
+        continue_()
     if authenticated:
         menu = MenuStart()
         menu.run(conn, initials, company_name, language)

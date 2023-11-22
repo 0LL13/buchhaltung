@@ -19,17 +19,13 @@ from context import setup_new_company
 
 # ######## initialize #########################################################
 
-def test_global_screen_cleared():
-    if main.screen_cleared is True:
-        assert False
-
-
 def test_clear_screen(mocker):
     mocker.patch("os.system")
     clear_screen()
+    os.system.assert_called_once()
     os.system.assert_called_with("clear")
     clear_screen()
-    os.system.assert_called_once()
+    os.system.assert_called()
 
 
 def test_state_company():

@@ -15,6 +15,9 @@ from .constants import password_prompt
 from .helpers import Menu
 
 
+debug = False
+
+
 class LoginMenu(Menu):
     """Menu options for starting buha."""
     def __init__(self):
@@ -33,7 +36,6 @@ class LoginMenu(Menu):
             choice = choose_option(language)
             if choice == "1":
                 authenticated, initials = login_employee(conn, language, company_name)  # noqa
-                conn.commit()
                 break
             else:
                 authenticated = False
@@ -48,14 +50,17 @@ class LoginMenu(Menu):
 def login_employee(conn: sqlite3.Connection, language: str,
                    company_name: str) -> Tuple[bool, str]:
     """Returns authenticated, initials."""
+    global debug
+    debug = True
 
     initials = enter_initials(language)
-    initials_validated = initials_in_table(conn, initials)
-    if initials_validated:
+    if initials_in_table(conn, initials):
         if is_internal(conn, initials):
-            password = getpass.getpass(password_prompt[language])
-            password_validated = password_correct(conn, initials, password)
-            if password_validated:
+            if debug:
+                password = input(password_prompt[language])
+            else:
+                password = getpass.getpass(password_prompt[language])
+            if password_correct(conn, initials, password):
                 return True, initials
     return False, None
 
@@ -85,7 +90,7 @@ def initials_in_table(conn: sqlite3.Connection, initials: str) -> bool:
         res_initials = res.fetchall()
         for res in res_initials:
             abbr = ''.join(str(c) for c in res)
-            if 0:
+            if 1:
                 print("res_initials: ", res_initials)
                 print("abbr: ", abbr)
                 print("initials: ", initials)

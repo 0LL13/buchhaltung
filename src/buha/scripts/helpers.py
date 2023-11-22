@@ -24,7 +24,7 @@ class Menu:
     navigation_stack = []
 
     def menu_changed(self) -> bool:
-        if 1:
+        if 0:
             print("menu_changed, nav stack: ", Menu.navigation_stack)
             print("menu_changed, caller_modules")
             print("last: ", Menu.last_caller_module)
