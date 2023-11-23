@@ -16,9 +16,12 @@ from buha.scripts import (  # type: ignore # isort:skip # noqa # pylint: disable
 )  # pylint: disable=unused-import  # noqa
 
 from buha.scripts.helpers import (  # type: ignore # isort:skip # noqa # pylint: disable=unused-import, wrong-import-position
-    path_to_db_dir,
-    path_to_database,
     check_databases,
+    create_headline,
+    Menu,
+    mk_initials,
+    path_to_database,
+    path_to_db_dir,
     state_company,
     state_company_prompt,
 )  # pylint: disable=unused-import  # noqa
@@ -41,6 +44,7 @@ from buha.scripts.login import (  # type: ignore # isort:skip # noqa # pylint: d
 
 from buha.scripts.shared import (  # type: ignore # isort:skip # noqa # pylint: disable=unused-import, wrong-import-position
     clear_screen,
+    Name,
 )  # pylint: disable=unused-import  # noqa
 
 

@@ -51,7 +51,7 @@ def login_employee(conn: sqlite3.Connection, language: str,
                    company_name: str) -> Tuple[bool, str]:
     """Returns authenticated, initials."""
     global debug
-    debug = True
+    debug = False
 
     initials = enter_initials(language)
     if initials_in_table(conn, initials):

@@ -17,6 +17,7 @@ twine = "*"
 fuzzywuzzy = "*"
 levenshtein = "*"
 pytest-mock = "*"
+pytest-cov = "*"
 
 [dev-packages]
 

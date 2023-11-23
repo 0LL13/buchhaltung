@@ -16,7 +16,7 @@ from .shared import Name
 from .shared import clear_screen
 
 
-# ############## class definitions ############################################
+# ############## basic class Menu #############################################
 
 class Menu:
     last_caller_module = None

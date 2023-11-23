@@ -44,7 +44,7 @@ def choose_option(language: str) -> Callable:
 # ######## import -> main.py ##################################################
 
 main_headline = {
-    "en": "A small-scale accounting programm",
+    "en": "A small-scale accounting program",
     "de": "Ein Buchhaltungsprogramm für kleine Unternehmen",
 }
 
