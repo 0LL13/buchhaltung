@@ -49,7 +49,7 @@ class Menu:
         menu_task_head = create_headline(company_name, headline)  # noqa
         print(menu_task_head)
 
-    def change_menu(self, task: str):
+    def change_menu(self, task: str) -> None:
         Menu.navigation_stack.append(task)
         if self.get_caller_module_name() != "src.buha.scripts.helpers":
             Menu.current_caller_module = self.get_caller_module_name()
@@ -57,7 +57,7 @@ class Menu:
     def go_back(self):
         if Menu.navigation_stack:
             if len(Menu.navigation_stack) > 1:
-                del Menu.navigation_stack[0]
+                del Menu.navigation_stack[-1]
         self.last_caller_module = self.get_caller_module_name()
 
     def get_caller_module_name(self) -> str:
@@ -163,7 +163,8 @@ def state_company(language: str) -> str:
 def check_for_matches(company_name: str, targets: list, language: str) -> str | None:  # noqa
     """
     Check if a name resembles that of the names found in the database folder.
-    "targets" will be a non-empty list bc it's in an if-else condition.
+    "targets" will be a non-empty list bc when check_for_matches is called
+    targets is checked if it's an empty list.
     """
 
     threshold = 80
@@ -199,18 +200,12 @@ def check_databases() -> list:
     return targets
 
 
-# def database_exists(company_name: str) -> bool:
-#     database_path = path_to_database(company_name)
-#
-#     return os.path.isfile(database_path)
-
-
 def pick_language() -> str:
     clear_screen()
 
     pick_language_prompt = f"""
     +{'-' * 77}+
-    | BUHA START MENU{' ' * 61}|
+    | BUHA STARTMENÜ{' ' * 62}|
     +{'-' * 77}+
 
     Welche Sprache? de
@@ -225,10 +220,9 @@ def pick_language() -> str:
     --> """
 
     language = input(pick_language_prompt)
-    if language == "x":
+    if language not in ["de", "en", "fr", "es", "it", "tr"]:
+        print("Beenden ohne Änderung der Sprache.")
         sys.exit()
-    elif language not in ["de", "en", "fr", "es", "it", "tr"]:
-        language = pick_language()
 
     return language
 
@@ -268,17 +262,6 @@ def show_table(conn: sqlite3.Connection, table: str) -> None:
         continue_()
 
 
-def show_all(conn: sqlite3.Connection, person_id: int) -> None:
-    tables = ["persons", "names", "settings"]
-    with conn:
-        cur = conn.cursor()
-        for table in tables:
-            query = f"SELECT * FROM {table} WHERE person_id = ?"
-            cur.execute(query, (person_id,))
-            res = cur.fetchone()
-            print(res[0])
-
-
 def show_my_table(conn: sqlite3.Connection, table: str, person_id: int) -> None:  # noqa
     with conn:
         cur = conn.cursor()
@@ -288,3 +271,14 @@ def show_my_table(conn: sqlite3.Connection, table: str, person_id: int) -> None:
         if res:
             res_value = res[0]
             print(res_value)
+
+
+def show_all(conn: sqlite3.Connection, person_id: int) -> None:
+    tables = ["persons", "names", "settings"]
+    with conn:
+        cur = conn.cursor()
+        for table in tables:
+            query = f"SELECT * FROM {table} WHERE person_id = ?"
+            cur.execute(query, (person_id,))
+            res = cur.fetchone()
+            print(res)

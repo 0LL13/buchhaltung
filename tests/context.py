@@ -17,11 +17,20 @@ from buha.scripts import (  # type: ignore # isort:skip # noqa # pylint: disable
 
 from buha.scripts.helpers import (  # type: ignore # isort:skip # noqa # pylint: disable=unused-import, wrong-import-position
     check_databases,
+    check_for_matches,
+    check_if_internal,
+    continue_,
     create_headline,
+    get_person_id,
+    initials_in_table,
     Menu,
     mk_initials,
     path_to_database,
     path_to_db_dir,
+    pick_language,
+    show_all,
+    show_my_table,
+    show_table,
     state_company,
     state_company_prompt,
 )  # pylint: disable=unused-import  # noqa

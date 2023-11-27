@@ -18,6 +18,7 @@ fuzzywuzzy = "*"
 levenshtein = "*"
 pytest-mock = "*"
 pytest-cov = "*"
+pyfakefs = "*"
 
 [dev-packages]
 

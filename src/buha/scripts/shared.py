@@ -13,7 +13,6 @@ from .constants import german_attrs
 
 
 language = "de"
-screen_cleared = False
 
 
 def is_posix() -> bool:
