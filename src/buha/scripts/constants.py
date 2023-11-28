@@ -283,7 +283,7 @@ start_menu["en"] = """
     """
 
 start_headline = {
-    "de": "STARTMENü",
+    "de": "STARTMENÜ",
     "en": "START MENU",
 }
 

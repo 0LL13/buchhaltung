@@ -61,10 +61,10 @@ class MenuStart(Menu):
         menu.run(conn, created_by, company_name, language)
 
     def change_entry(self, conn, initials) -> None:
-        pass
+        print("ToDo")
 
     def search_entry(self, conn, initials) -> None:
-        pass
+        print("ToDo")
 
     def settings(self, conn: sqlite3.Connection, initials: str,
                  company_name: str, language: str) -> None:

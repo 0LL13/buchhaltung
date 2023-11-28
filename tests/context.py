@@ -12,7 +12,8 @@ sys.path.append(
 )  # isort: skip # noqa # pylint: disable=wrong-import-position
 
 from buha.scripts import (  # type: ignore # isort:skip # noqa # pylint: disable=unused-import, wrong-import-position
-    helpers
+    helpers,
+    start,
 )  # pylint: disable=unused-import  # noqa
 
 from buha.scripts.helpers import (  # type: ignore # isort:skip # noqa # pylint: disable=unused-import, wrong-import-position
@@ -43,6 +44,11 @@ from buha.scripts.constants import (  # type: ignore # isort:skip # noqa # pylin
 
 from buha.scripts.person import (  # type: ignore # isort:skip # noqa # pylint: disable=unused-import, wrong-import-position
     MenuNewPerson as NewPerson,
+)  # pylint: disable=unused-import  # noqa
+
+
+from buha.scripts.start import (  # type: ignore # isort:skip # noqa # pylint: disable=unused-import, wrong-import-position
+    MenuStart,
 )  # pylint: disable=unused-import  # noqa
 
 
