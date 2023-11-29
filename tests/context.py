@@ -47,6 +47,12 @@ from buha.scripts.person import (  # type: ignore # isort:skip # noqa # pylint: 
 )  # pylint: disable=unused-import  # noqa
 
 
+from buha.scripts.new_entry import (  # type: ignore # isort:skip # noqa # pylint: disable=unused-import, wrong-import-position
+    MenuNewEntry as NewEntry,
+)  # pylint: disable=unused-import  # noqa
+
+
+
 from buha.scripts.start import (  # type: ignore # isort:skip # noqa # pylint: disable=unused-import, wrong-import-position
     MenuStart,
 )  # pylint: disable=unused-import  # noqa
