@@ -9,9 +9,11 @@ import sqlite3
 from unittest.mock import Mock
 from unittest.mock import patch
 
+# from context import choose_option
 from context import helpers
 from context import NewEntry
 from context import MenuStart
+from context import start
 
 
 @pytest.fixture
@@ -151,3 +153,72 @@ def test_start_menu_run_get_choice_1(mocker):
 
     mock_menu_start.new_entry.assert_called_once()
     mock_menu_newentry.run.assert_called_once()
+
+
+def test_start_menu_input_in_choices():
+    menu = MenuStart()
+    for i in ["1", "2", "3", "4", "5", "9"]:
+        assert i in menu.choices
+
+
+def test_start_menu_input_not_in_choices():
+    menu = MenuStart()
+    for i in ["a", "100", "not valid"]:
+        assert i not in menu.choices
+
+
+def test_start_menu_input_get_choice():
+    mock_menu_start = Mock(spec=MenuStart)
+
+    mock_menu_start.new_entry = Mock(return_value=True)
+    mock_menu_start.change_entry = Mock(return_value=True)
+    mock_menu_start.search_entry = Mock(return_value=True)
+    mock_menu_start.settings = Mock(return_value=True)
+    mock_menu_start.logout = Mock(return_value=True)
+
+    mock_menu_start.choices = {
+            "1": mock_menu_start.new_entry,
+            "2": mock_menu_start.change_entry,
+            "3": mock_menu_start.search_entry,
+            "4": mock_menu_start.settings,
+            "5": mock_menu_start.logout,
+            "9": False
+        }
+
+    with patch.object(start, "choose_option", side_effect=["1", "2", "3", "4", "5"]) as mock_choice:  # noqa
+        assert mock_menu_start.choices.get(mock_choice())
+
+
+def test_start_menu_input_get_choice_that_is_not_valid():
+    mock_menu_start = Mock(spec=MenuStart)
+
+    mock_menu_start.new_entry = Mock(return_value=True)
+    mock_menu_start.change_entry = Mock(return_value=True)
+    mock_menu_start.search_entry = Mock(return_value=True)
+    mock_menu_start.settings = Mock(return_value=True)
+    mock_menu_start.logout = Mock(return_value=True)
+
+    mock_menu_start.choices = {
+            "1": mock_menu_start.new_entry,
+            "2": mock_menu_start.change_entry,
+            "3": mock_menu_start.search_entry,
+            "4": mock_menu_start.settings,
+            "5": mock_menu_start.logout,
+            "9": False
+        }
+
+    with patch.object(start, "choose_option", side_effect=["not valid"]) as mock_choice:  # noqa
+        if mock_menu_start.choices.get(mock_choice()):
+            assert False
+
+
+def test_start_menu_input_get_choice_that_should_return_False():
+    mock_menu_start = Mock(spec=MenuStart)
+
+    mock_menu_start.choices = {
+            "9": False
+        }
+
+    with patch.object(start, "choose_option", side_effect=["9"]) as mock_choice:  # noqa
+        if mock_menu_start.choices.get(mock_choice()):
+            assert False
