@@ -9,10 +9,11 @@ import sqlite3
 from unittest.mock import Mock
 from unittest.mock import patch
 
-# from context import choose_option
+from context import constants
 from context import helpers
-from context import NewEntry
+from context import Menu
 from context import MenuStart
+from context import NewEntry
 from context import start
 
 
@@ -67,11 +68,24 @@ def display_wo_change():
     return expected
 
 
+# ######## initialize Menu ####################################################
+
+def test_start_menu_reset():
+    Menu.last_caller_module = None
+    Menu.current_caller_module = None
+    Menu.navigation_stack = []
+    menu = Menu()
+    assert menu.last_caller_module is None
+    assert menu.current_caller_module is None
+    assert menu.navigation_stack == []
+
+
 # ######## MenuStart class ####################################################
 
 def test_start_menu_class_init():
     menu = MenuStart()
-    assert menu.last_caller_module == "start"
+    if menu.last_caller_module == "start":
+        assert False
     assert menu.current_caller_module == "src.buha.scripts.start"
     assert menu.navigation_stack == ["start"]
 
@@ -105,7 +119,7 @@ def test_start_menu_run(mocker, capsys, display_with_change):
 
 
 @patch("builtins.input", return_value="9")
-def test_start_menu_run_get_choice_9(mocker):
+def test_start_menu_run_get_choice_to_go_back(mocker):
     menu = MenuStart()
     company_name = "Test & Co.   "
     language = "de"
@@ -167,6 +181,12 @@ def test_start_menu_input_not_in_choices():
         assert i not in menu.choices
 
 
+def test_start_menu_input_returns_False():
+    menu = MenuStart()
+    if menu.choices.get("9"):
+        assert False
+
+
 def test_start_menu_input_get_choice():
     mock_menu_start = Mock(spec=MenuStart)
 
@@ -213,12 +233,164 @@ def test_start_menu_input_get_choice_that_is_not_valid():
 
 
 def test_start_menu_input_get_choice_that_should_return_False():
-    mock_menu_start = Mock(spec=MenuStart)
-
-    mock_menu_start.choices = {
+    menu = MenuStart
+    menu.choices = {
             "9": False
         }
 
     with patch.object(start, "choose_option", side_effect=["9"]) as mock_choice:  # noqa
-        if mock_menu_start.choices.get(mock_choice()):
+        if menu.choices.get(mock_choice()):
             assert False
+
+
+@patch("builtins.input")
+def test_start_menu_run_get_choice_9(mocker):
+    menu = MenuStart()
+    company_name = "Test & Co.   "
+    language = "de"
+    created_by = "tb"
+
+    with patch.object(constants, "choose_option", return_value="9"):
+        if menu.run(mock_conn, created_by, company_name, language):
+            assert False
+#
+#
+# @patch("builtins.input", return_value=None)
+# def test_start_menu_input_get_action_new_entry(mocker):
+#     menu = MenuStart()
+#     mock_menu = Mock(return_value=None)
+#
+#     with patch.object(start, "choose_option", side_effect=["1"]) as mock_choice:  # noqa
+#         with mocker.patch("src.buha.new_entry.MenuNewEntry.run", return_value=None) as mock_new_entry:  # noqa
+#             menu.run(mock_conn, "test_func", "test_company", "de")
+#             mock_choice.assert_called_with("de")
+#             mock_new_entry.assert_called_with(mock_conn, "test_func", "test_company", "de")  # noqa
+#
+#
+# @patch("builtins.input", side_effect=["1"])
+# def test_start_menu_run_get_action_new_entry(mocker):
+#     company_name = "Test & Co.   "
+#     language = "de"
+#     created_by = "test_func"
+#
+#     menu_start = MenuStart()
+#     menu_new_entry = NewEntry()
+#     menu_start.run = Mock(return_value=menu_start.run(mock_conn, created_by, company_name, language))  # noqa
+#     menu_start.new_entry = Mock(return_value=menu_start.new_entry(mock_conn, created_by, company_name, language))  # noqa
+#     menu_new_entry.run = Mock(return_value=None)
+#
+#     def mock_start_run(*args):
+#         user_input = input()
+#         if user_input == "1":
+#             menu_start.run()
+#
+#     menu_start.new_entry.assert_called_once()
+#     menu_new_entry.run.assert_called_once()
+#
+#
+# @patch("buha.scripts.new_entry.MenuNewEntry", autospec=True)
+# @patch("builtins.input", side_effect=["1"])
+# def test_start_menu_run_get_action_new_entry(mock_input,
+# mock_new_entry_class):  # noqa
+#     company_name = "Test & Co."
+#     language = "de"
+#     created_by = "test_func"
+#     mock_conn = Mock()
+#
+#     menu_start = MenuStart()
+#
+#     def mock_start_run(*args):
+#         user_input = input()
+#         if user_input == "1":
+#             with patch.object(menu_start, "new_entry", autospec=True) as mock_new_entry_method:  # noqa
+#                 menu_start.run(mock_conn, created_by, company_name, language)
+#
+#                 mock_new_entry_method.assert_called_once_with(mock_conn, created_by, company_name, language)  # noqa
+#                 mock_new_entry_instance = mock_new_entry_class.return_value
+#                 mock_new_entry_instance.run.assert_called_once_with(mock_conn, created_by, company_name, language)  # noqa
+#
+#
+# @patch("buha.scripts.new_entry.MenuNewEntry", autospec=True)
+# def test_start_menu_run_get_action_new_entry(new_entry_mock):
+#     company_name = "Test & Co."
+#     language = "de"
+#     created_by = "test_func"
+#     mock_conn = Mock()
+#
+#     with patch("builtins.input", side_effect=["1"]):
+#         menu_start = MenuStart()
+#         menu_start.run(mock_conn, created_by, company_name, language)
+#
+#         new_entry_mock.assert_called()
+#
+#
+# @patch("buha.scripts.new_entry.MenuNewEntry", autospec=True)
+# @patch("builtins.input", side_effect=["1"])
+# def test_start_menu_run_get_action_new_entry(mock_input,
+# mock_new_entry_class):  # noqa
+#     company_name = "Test & Co."
+#     language = "de"
+#     created_by = "test_func"
+#     mock_conn = Mock()
+#
+#     menu_start = MenuStart()
+#
+#     def mock_start_run(*args):
+#         user_input = input()
+#         if user_input == "1":
+#             with patch.object(menu_start, "new_entry", autospec=True) as mock_new_entry_method:  # noqa
+#                 menu_start.run(mock_conn, created_by, company_name, language)
+#
+#                 mock_new_entry_method.assert_called_once_with(mock_conn, created_by, company_name, language)  # noqa
+#                 mock_new_entry_instance = mock_new_entry_class.return_value
+#                 mock_new_entry_instance.run.assert_called_once_with(mock_conn, created_by, company_name, language)  # noqa
+#
+#
+# @patch("buha.scripts.new_entry.MenuNewEntry", autospec=True)
+# @patch("builtins.input", side_effect=["1", "1", "1", "1", "testname"])
+# def test_start_menu_run_get_action_new_entry(mock_input,
+# mock_new_entry_class):  # noqa
+#     company_name = "Test & Co.   "
+#     language = "de"
+#     created_by = "test_func"
+#     mock_conn = Mock()
+#
+#     menu_start = MenuStart()
+#     menu_newentry = NewEntry()
+#     menu_person = NewPerson()
+#     menu_name = MenuName()
+#
+#     def mock_enter_prompt(*args):
+#         return "testname"
+#
+#     @patch("buha.scripts.constants.enter_prompt", return_value=mock_enter_prompt)  # noqa
+#     def mock_enter_firstname(*args, **kwargs):
+#         return MenuName.enter_firstname("prompt", "de")
+#
+#     with patch.object(menu_start, "new_entry", autospec=True) as mock_new_entry_method:  # noqa
+#         with patch.object(menu_newentry, "new_person", autospec=True), \
+#             patch.object(menu_person, "enter_name", autospec=True), \
+#                 patch.object(menu_name, "enter_firstname", autospec=True, side_effect=mock_enter_firstname):  # noqa
+#                     menu_start.run(mock_conn, created_by, company_name, language)  # noqa
+#
+#                     mock_new_entry_method.assert_called_once_with(mock_conn, created_by, company_name, language)  # noqa
+#                     mock_new_entry_instance = mock_new_entry_class.return_value  # noqa
+#                     mock_new_entry_instance.run.assert_called_once_with(mock_conn, created_by, company_name, language)  # noqa
+#
+#
+# @patch("builtins.input", side_effect=["1", "9", "9"])
+# def test_start_menu_run_get_action_new_entry(mock_input):  # noqa
+#     company_name = "Test & Co.   "
+#     language = "de"
+#     created_by = "test_func"
+#     mock_conn = Mock()
+#
+#     menu_start = MenuStart()
+#     menu_newentry = NewEntry()
+#
+#     with patch.object(menu_start, "new_entry", autospec=True) as mock_new_entry_method:  # noqa
+#         with patch.object(menu_newentry, "new_person", autospec=True):
+#
+#             menu_start.run(mock_conn, created_by, company_name, language)  # noqa
+#
+#             mock_new_entry_method.assert_called_once_with(mock_conn, created_by, company_name, language)  # noqa

@@ -109,11 +109,11 @@ names_menu = dict()
 names_menu["en"] = """
     Fields with (*) are obligatory
 
-    1: (*) First Name
+    1: (*) First Name / Given Name
     2: Middle Name(s)
-    3: (*) Last Name
+    3: (*) Last Name / Family name
     4: Nickname
-    5: Maiden Name
+    5: Previous Name
     6: Generational Suffix (Jr., Sr.)
     7: Salutation
     8: Commit and back
@@ -123,9 +123,9 @@ names_menu["en"] = """
 names_menu["de"] = """
     Felder mit (*) sind Pflichtfelder
 
-    1: (*) Vorname
+    1: (*) Vorname / Rufname
     2: Zweitname(n)
-    3: (*) Nachname
+    3: (*) Nachname / Familienname
     4: Spitzname
     5: Geburtsname
     6: Generationen-Suffix (Jr., Sr.)
@@ -140,13 +140,13 @@ name_particulars_headline = {
 }
 
 firstname_prompt = {
-    "en": "    First name: ",
-    "de": "    Vorname: ",
+    "en": "    First name / Given name: ",
+    "de": "    Vorname / Rufname: ",
 }
 
 lastname_prompt = {
-    "en": "    Last name: ",
-    "de": "    Nachname: ",
+    "en": "    Last name / Family name: ",
+    "de": "    Nachname / Familienname: ",
 }
 
 middlenames_prompt = {
@@ -159,8 +159,8 @@ salutation_prompt = {
     "de": "    Anrede: ",
 }
 
-maiden_prompt = {
-    "en": "    Maiden name: ",
+previous_prompt = {
+    "en": "    Previous name: ",
     "de": "    Geburtsname: ",
 }
 

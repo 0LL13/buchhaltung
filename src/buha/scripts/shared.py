@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 # helpers.py
 """Shared class definitions to avoid circular import issues."""
+import datetime
 import os
 import platform
 
@@ -11,6 +12,8 @@ from typing import Optional
 
 from .constants import german_attrs
 
+
+# ######## helper functions ###################################################
 
 language = "de"
 
@@ -24,6 +27,10 @@ def is_posix() -> bool:
 
 def clear_screen() -> None:
     os.system("clear" if is_posix() else "cls")
+
+
+def get_today() -> str:
+    return datetime.date.today()
 
 
 # ######## class AttrDisplay ##################################################
@@ -100,7 +107,7 @@ class AttrDisplay:
 class _Name_default:
     middle_names: Optional[str] = field(default=None)
     nickname: Optional[str] = field(default=None)
-    maiden_name: Optional[str] = field(default=None)
+    previous_name: Optional[str] = field(default=None)
     suffix: Optional[str] = field(default=None)
     salutation: Optional[str] = field(default=None)
 

@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # names.py
-"""Dataclass Name and menu to enter names. Check if entry with given names
-already exists. If not, create one entry in sqlite3 table "persons" and one
-entry in "names", with names referencing to persons via foreign key."""
+"""Use dataclass Name and menu to enter names. Check if entry with given names
+already exists. If not, create entry in sqlite3 table "names", with names
+referencing to person_id via foreign key."""
 import datetime
 import re
 import sqlite3
@@ -14,8 +14,9 @@ from .constants import firstname_prompt
 from .constants import lastname_prompt
 from .constants import middlenames_prompt
 from .constants import nickname_prompt
-from .constants import maiden_prompt
+from .constants import previous_prompt
 from .constants import salutation_prompt
+from .constants import suffix_prompt
 from .constants import enter_prompt
 from .helpers import Menu
 from .shared import Name
@@ -33,7 +34,7 @@ class MenuName(Menu):
             "mn": None,
             "ln": None,
             "nn": None,
-            "maiden": None,
+            "pn": None,
             "suffix": None,
             "salutation": None,
         }
@@ -43,7 +44,7 @@ class MenuName(Menu):
             "2": self.enter_middlenames,
             "3": self.enter_lastname,
             "4": self.enter_nickname,
-            "5": self.enter_maidenname,
+            "5": self.enter_previousname,
             "6": self.enter_generational_suffix,
             "7": self.enter_salutation,
             "8": self.commit,
@@ -96,80 +97,32 @@ class MenuName(Menu):
 
     def enter_firstname(self, language: str) -> None:
         firstname = enter_prompt(firstname_prompt, language)
-        if not firstname.isalpha():
-            firstname = self.enter_firstname()
         self.entries["fn"] = firstname
 
     def enter_middlenames(self, language) -> None:
         middlename = enter_prompt(middlenames_prompt, language)
         middlename = re.sub(" +", " ", middlename)
-        if " " in middlename:
-            print("empty space in middlenames")
-            for mn in middlename.split(" "):
-                if not mn.isalpha():
-                    print("    Input must contain alphabetic characters only.")
-                    choice = input("    Try again? y/N: ")
-                    if choice == "y":
-                        self.enter_middlenames(language)
-                    else:
-                        middlename = None
-        elif not middlename.isalpha():
-            print("    Input must contain alphabetic characters only.")
-            self.enter_middlenames(language)
-        else:
-            self.entries["mn"] = middlename
-
-        print("enter_middlenames: ", self.entries)
-        print("middlename: ", middlename)
+        self.entries["mn"] = middlename
 
     def enter_lastname(self, language: str) -> None:
         lastname = enter_prompt(lastname_prompt, language)
-        if not lastname.isalpha():
-            lastname = self.enter_lastname()
         self.entries["ln"] = lastname
 
     def enter_nickname(self, language) -> None:
         nickname = enter_prompt(nickname_prompt, language)
-        if not nickname.isalnum():
-            choice = input("    Try again? y/N: ")
-            if choice == "y":
-                nickname = self.enter_nickname()
-            else:
-                nickname = None
         self.entries["nn"] = nickname
 
-    def enter_maidenname(self, language) -> None:
-        maidenname = enter_prompt(maiden_prompt, language)
-        maidenname = re.sub(" +", " ", maidenname)
-        if " " in maidenname:
-            for mn in maidenname.split(" "):
-                if not mn.isalpha():
-                    print("    Input must contain alphabetic characters only.")
-                    maidenname = self.enter_maidenname()
-        elif not maidenname.isalpha():
-            print("    Input must contain alphabetic characters only.")
-            maidenname = self.enter_maidenname()
-
-        self.entries["maiden"] = maidenname
+    def enter_previousname(self, language) -> None:
+        previousname = enter_prompt(previous_prompt, language)
+        previousname = re.sub(" +", " ", previousname)
+        self.entries["pn"] = previousname
 
     def enter_generational_suffix(self, language) -> None:
-        suffix = enter_prompt(salutation_prompt, language)
-        if suffix not in ["Jr.", "Sr.", "Jr", "Sr", "Jnr", "Snr", "I", "II", "III"]:  # noqa
-            choice = input("    Try again? y/N: ")
-            if choice == "y":
-                suffix = input("    Generational Suffix: ")
-            else:
-                suffix = None
+        suffix = enter_prompt(suffix_prompt, language)
         self.entries["suffix"] = suffix
 
     def enter_salutation(self, language) -> None:
-        salutation = salutation_prompt(language)
-        if salutation not in ["Herr", "Frau", "Fr.", "Hr."]:
-            choice = input("    Try again? y/N: ")
-            if choice == "y":
-                salutation = self.enter_salutation()
-            else:
-                salutation = None
+        salutation = enter_prompt(salutation_prompt, language)
         self.entries["salutation"] = salutation
 
     def generate_name_instance(self) -> Name:
@@ -178,9 +131,9 @@ class MenuName(Menu):
         # https://stackoverflow.com/a/17755259/6597765
         first_name, last_name = itemgetter("fn", "ln")(collected_entries)
         name_list = [first_name, last_name]
-        mn, nn, maiden, suffix, salutation = \
-            itemgetter("mn", "nn", "maiden", "suffix", "salutation")(collected_entries)  # noqa
-        default_names_list = [mn, nn, maiden, suffix, salutation]
+        mn, nn, pn, suffix, salutation = \
+            itemgetter("mn", "nn", "pn", "suffix", "salutation")(collected_entries)  # noqa
+        default_names_list = [mn, nn, pn, suffix, salutation]
 
         name = Name(*name_list, *default_names_list)
         if 0:
@@ -197,7 +150,7 @@ class MenuName(Menu):
                          middle_names TEXT,
                          last_name TEXT NOT NULL,
                          nickname TEXT,
-                         maiden_name TEXT,
+                         previous_name TEXT,
                          suffix TEXT,
                          salutation TEXT,
                          FOREIGN KEY (person_id)
@@ -210,12 +163,26 @@ class MenuName(Menu):
             conn.commit()
 
     def commit_name_to_db(self, conn: sqlite3.Connection, created_by: str,
-                          name: Name, person_id: int, language) -> None:
+                          name: Name, person_id: int, language: str) -> None:
         self.generate_table_names(conn)
         if not self.name_already_in_db(conn, name, language):
             self.add_name_to_db(conn, created_by, name, person_id)
             self.reset_entries()
         else:
+            self.handle_double_entry(conn, created_by, name, person_id, language)  # noqa
+
+    def handle_double_entry(self, conn: sqlite3.Connection, created_by: str,
+                            name: Name, person_id: int, language: str):
+        double = """Entry with these first and last names already exists.
+                    Please add a middle name!"""
+        print(double)
+        self.enter_middlenames(language)
+        name = self.generate_name_instance()
+
+        if not self.name_already_in_db(conn, name, language):
+            self.add_name_to_db(conn, created_by, name, person_id)
+            self.reset_entries()
+
             message_name_exists = "Name already exists. Create entry anyway? y/N: "  # noqa
             choice = input(message_name_exists)
             if choice == "y":
@@ -228,17 +195,18 @@ class MenuName(Menu):
                        name: Name, person_id: int) -> None:
         add_name = """INSERT INTO names (
                       person_id, created_by, timestamp, first_name,
-                      middle_names, last_name, nickname, maiden_name, suffix,
+                      middle_names, last_name, nickname, previous_name, suffix,
                       salutation)
                       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"""
-        timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
+        # timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
+        timestamp = str(datetime.date.today())
 
         with conn:
             cur = conn.cursor()
             cur.execute(add_name, (person_id, created_by, timestamp,
                                    name.first_name, name.middle_names,
                                    name.last_name, name.nickname,
-                                   name.maiden_name, name.suffix,
+                                   name.previous_name, name.suffix,
                                    name.salutation))
             conn.commit()
 
@@ -256,12 +224,8 @@ class MenuName(Menu):
                 print(fn, mn, ln)
             if fn.lower() == name.first_name.lower():
                 if ln.lower() == name.last_name.lower():
-                    double = "Entry with these first and last names already exists. Please add a middle name!"  # noqa
                     if mn is None and name.middle_names is None:
-                        print(double)
-                        self.enter_middlenames(language)
-                        name = self.generate_name_instance()
-                        return self.name_already_in_db(conn, name)
+                        return True
                     elif mn is None and name.middle_names is not None:
                         return False
                     else:
