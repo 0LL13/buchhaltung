@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # test_main.py
-"""Tests for "main" module."""
-
 import pytest
 import os
 import sqlite3

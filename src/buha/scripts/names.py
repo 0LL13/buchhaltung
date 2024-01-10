@@ -75,11 +75,9 @@ class MenuName(Menu):
                     name = action(created_by, conn, language)
                     super().go_back()
                     return name
-                elif action:
+                else:
                     super().change_menu("names")
                     action(language)
-                else:
-                    print(f"{choice} is not a valid choice.")
 
         super().go_back()
         return None, None
@@ -91,6 +89,10 @@ class MenuName(Menu):
             print("No valid name. Name needs first and last names.")
             super().go_back()
             return None
+
+        # note: the actual commitment to the database will be done by the
+        # calling function from person.py because person_id is needed and can
+        # only be provided from there
 
         super().go_back()
         return name
@@ -172,9 +174,12 @@ class MenuName(Menu):
             self.handle_double_entry(conn, created_by, name, person_id, language)  # noqa
 
     def handle_double_entry(self, conn: sqlite3.Connection, created_by: str,
-                            name: Name, person_id: int, language: str):
-        double = """Entry with these first and last names already exists.
-                    Please add a middle name!"""
+                            name: Name, person_id: int, language: str) -> None:
+        double = """
+        Entry with these first and last names already exists.
+        Please add a middle name!
+        """
+
         print(double)
         self.enter_middlenames(language)
         name = self.generate_name_instance()
@@ -182,14 +187,12 @@ class MenuName(Menu):
         if not self.name_already_in_db(conn, name, language):
             self.add_name_to_db(conn, created_by, name, person_id)
             self.reset_entries()
-
-            message_name_exists = "Name already exists. Create entry anyway? y/N: "  # noqa
-            choice = input(message_name_exists)
-            if choice == "y":
-                self.add_name_to_db(conn, created_by, name)
-                self.reset_entries()
-
-        return
+            return
+        else:
+            message_name_exists = "Name already exists. Aborting"
+            print(message_name_exists)
+            self.reset_entries()
+            return
 
     def add_name_to_db(self, conn: sqlite3.Connection, created_by: str,
                        name: Name, person_id: int) -> None:
@@ -198,8 +201,8 @@ class MenuName(Menu):
                       middle_names, last_name, nickname, previous_name, suffix,
                       salutation)
                       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"""
-        # timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
-        timestamp = str(datetime.date.today())
+        timestamp = str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M"))
+        # timestamp = str(datetime.date.today())
 
         with conn:
             cur = conn.cursor()

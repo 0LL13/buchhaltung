@@ -152,17 +152,30 @@ def test_name_menu_run_get_choice_to_go_back(mocker):
         mock_super.assert_called_once()
 
 
+@patch("builtins.input", side_effect=["1", "test_fn", "9"])
+def test_name_menu_run_action_triggers_change_menu(mocker):
+    menu = MenuName()
+    company_name = "Test & Co.   "
+    language = "de"
+    created_by = "tester"
+
+    with patch.object(helpers.Menu, "change_menu") as mock_super:
+        menu.run(mock_conn, created_by, company_name, language)
+        mock_super.assert_called_once()
+
+
 @patch("builtins.input", return_value="not valid")
 def test_name_menu_run_get_choice_not_valid(mocker, capsys, display_wo_change):  # noqa
     menu = MenuName()
     company_name = "Test & Co.   "
     language = "de"
     created_by = "tester"
-    expected = display_wo_change
+    expected_display = display_wo_change
 
     menu.run(mock_conn, created_by, company_name, language)
-    actual, err = capsys.readouterr()
-    assert actual == expected
+    actual_display, err = capsys.readouterr()
+
+    assert actual_display == expected_display
 
 
 # ######## MenuName class methods #############################################
@@ -267,7 +280,8 @@ def mock_db_connection():
 def test_names_add_name_to_db(mock_db_connection):
     person_id = "11"
     created_by = "test_func"
-    today = str(datetime.date.today())
+    timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
+    # today = str(datetime.date.today())
 
     menu = MenuName()
     menu.entries["fn"] = "test_fn"
@@ -285,6 +299,261 @@ def test_names_add_name_to_db(mock_db_connection):
     assert len(rows) > 0, "No data found in the table"
 
     columns = [str(row) if row is not None else None for row in rows[0]]
-    expected_row = ['1', '11', 'test_func', today, 'test_fn', None, 'test_ln',
-                    None, None, None, None]
+    expected_row = ['1', '11', 'test_func', timestamp, 'test_fn', None,
+                    'test_ln', None, None, None, None]
     assert columns == expected_row
+
+
+def test_names_name_already_in_db_wo_middlename(mock_db_connection):
+    person_id = "11"
+    created_by = "test_func"
+    language = "de"
+
+    menu = MenuName()
+    menu.entries["fn"] = "test_fn"
+    menu.entries["ln"] = "test_ln"
+    name_1 = menu.generate_name_instance()
+    name_2 = menu.generate_name_instance()
+
+    menu.generate_table_names(mock_db_connection)
+    menu.add_name_to_db(mock_db_connection, created_by, name_1, person_id)
+
+    assert isinstance(menu.name_already_in_db(mock_db_connection, name_2, language), bool)  # noqa
+    assert menu.name_already_in_db(mock_db_connection, name_2, language)
+
+
+def test_names_name_already_in_db_with_one_middlename(mock_db_connection):
+    person_id = "11"
+    created_by = "test_func"
+    language = "de"
+
+    menu = MenuName()
+    menu.entries["fn"] = "test_fn"
+    menu.entries["ln"] = "test_ln"
+    name_1 = menu.generate_name_instance()
+    menu.entries["mn"] = "test_mn"
+    name_2 = menu.generate_name_instance()
+
+    menu.generate_table_names(mock_db_connection)
+    menu.add_name_to_db(mock_db_connection, created_by, name_1, person_id)
+
+    if menu.name_already_in_db(mock_db_connection, name_2, language):
+        assert False
+
+
+def test_names_name_already_in_db_with_same_middlenames(mock_db_connection):
+    person_id = "11"
+    created_by = "test_func"
+    language = "de"
+
+    menu = MenuName()
+    menu.entries["fn"] = "test_fn"
+    menu.entries["ln"] = "test_ln"
+    menu.entries["mn"] = "test_mn"
+    name_1 = menu.generate_name_instance()
+    name_2 = menu.generate_name_instance()
+
+    menu.generate_table_names(mock_db_connection)
+    menu.add_name_to_db(mock_db_connection, created_by, name_1, person_id)
+
+    assert menu.name_already_in_db(mock_db_connection, name_2, language)
+
+
+def test_names_name_already_in_db_wo_middlename_and_several_names(mock_db_connection):  # noqa
+    person_id = "11"
+    created_by = "test_func"
+    language = "de"
+
+    menu = MenuName()
+    menu.entries["fn"] = "test_1_fn"
+    menu.entries["ln"] = "test_1_ln"
+    name_1 = menu.generate_name_instance()
+
+    menu.entries["fn"] = "test_2_fn"
+    menu.entries["ln"] = "test_2_ln"
+    name_2 = menu.generate_name_instance()
+
+    menu.entries["fn"] = "test_3_fn"
+    menu.entries["ln"] = "test_3_ln"
+    name_3 = menu.generate_name_instance()
+
+    menu.generate_table_names(mock_db_connection)
+    menu.add_name_to_db(mock_db_connection, created_by, name_1, person_id)
+    menu.add_name_to_db(mock_db_connection, created_by, name_2, person_id)
+    menu.add_name_to_db(mock_db_connection, created_by, name_3, person_id)
+
+    assert menu.name_already_in_db(mock_db_connection, name_2, language)
+
+
+def test_names_name_not_already_in_db_wo_middlename_and_several_names(mock_db_connection):  # noqa
+    person_id = "11"
+    created_by = "test_func"
+    language = "de"
+
+    menu = MenuName()
+    menu.entries["fn"] = "test_1_fn"
+    menu.entries["ln"] = "test_1_ln"
+    name_1 = menu.generate_name_instance()
+
+    menu.entries["fn"] = "test_2_fn"
+    menu.entries["ln"] = "test_2_ln"
+    name_2 = menu.generate_name_instance()
+
+    menu.entries["fn"] = "test_3_fn"
+    menu.entries["ln"] = "test_3_ln"
+    name_3 = menu.generate_name_instance()
+
+    menu.generate_table_names(mock_db_connection)
+    menu.add_name_to_db(mock_db_connection, created_by, name_1, person_id)
+    menu.add_name_to_db(mock_db_connection, created_by, name_2, person_id)
+
+    if menu.name_already_in_db(mock_db_connection, name_3, language):
+        assert False
+
+
+def test_names_name_not_already_in_db_wo_middlename_and_several_names_and_same_fn(mock_db_connection):  # noqa
+    person_id = "11"
+    created_by = "test_func"
+    language = "de"
+
+    menu = MenuName()
+    menu.entries["fn"] = "test_1_fn"
+    menu.entries["ln"] = "test_1_ln"
+    name_1 = menu.generate_name_instance()
+
+    menu.entries["fn"] = "test_2_fn"
+    menu.entries["ln"] = "test_2_ln"
+    name_2 = menu.generate_name_instance()
+
+    menu.entries["fn"] = "test_2_fn"
+    menu.entries["ln"] = "test_3_ln"
+    name_3 = menu.generate_name_instance()
+
+    menu.generate_table_names(mock_db_connection)
+    menu.add_name_to_db(mock_db_connection, created_by, name_1, person_id)
+    menu.add_name_to_db(mock_db_connection, created_by, name_2, person_id)
+
+    if menu.name_already_in_db(mock_db_connection, name_3, language):
+        assert False
+
+
+# ######## handle double entry ################################################
+
+@patch("builtins.input", return_value="test_foo")
+def test_names_handle_double_entry_true(mock_db_connection):
+    person_id = "11"
+    created_by = "test_func"
+    language = "de"
+
+    menu = MenuName()
+    menu.entries["fn"] = "test_1_fn"
+    menu.entries["ln"] = "test_1_ln"
+    name_1 = menu.generate_name_instance()
+
+    with patch.object(menu, "enter_middlenames", autospec=True) as mock_enter_middlenames:  # noqa
+        with patch.object(menu, "name_already_in_db", return_value=True):
+            menu.handle_double_entry(mock_conn, created_by, name_1, person_id, language)  # noqa
+            mock_enter_middlenames.assert_called_once()
+
+
+@patch("builtins.input", return_value="test_foo")
+def test_names_handle_double_entry_false(mock_db_connection):
+    person_id = "11"
+    created_by = "test_func"
+    language = "de"
+
+    menu = MenuName()
+    menu.entries["fn"] = "test_1_fn"
+    menu.entries["ln"] = "test_1_ln"
+    name_1 = menu.generate_name_instance()
+
+    with patch.object(menu, "enter_middlenames", autospec=True) as mock_enter_middlenames:  # noqa
+        with patch.object(menu, "name_already_in_db", return_value=False):
+            with patch.object(menu, "add_name_to_db", autospec=True) as mock_add_name:  # noqa
+                menu.handle_double_entry(mock_conn, created_by, name_1, person_id, language)  # noqa
+                mock_enter_middlenames.assert_called_once()
+                mock_add_name.assert_called_once_with(mock_conn, created_by, name_1, person_id)  # noqa
+
+
+@patch("builtins.input", return_value="test_foo")
+def test_names_commit_name_to_db_but_double(mock_db_connection):
+    person_id = "11"
+    created_by = "test_func"
+    language = "de"
+
+    menu = MenuName()
+    menu.entries["fn"] = "test_1_fn"
+    menu.entries["ln"] = "test_1_ln"
+    name = menu.generate_name_instance()
+
+    with patch.object(menu, "generate_table_names", autospec=True) as mock_generate_table_names:  # noqa
+        with patch.object(menu, "name_already_in_db", return_value=True):
+            with patch.object(menu, "handle_double_entry", autospec=True) as mock_handle_double:  # noqa
+                menu.commit_name_to_db(mock_conn, created_by, name, person_id, language)  # noqa
+                mock_generate_table_names.assert_called_once()
+                mock_handle_double.assert_called_once_with(mock_conn, created_by, name, person_id, language)  # noqa
+
+
+@patch("builtins.input", return_value="test_foo")
+def test_names_commit_name_to_db_new_entry(mock_db_connection):
+    person_id = "11"
+    created_by = "test_func"
+    language = "de"
+
+    menu = MenuName()
+    menu.entries["fn"] = "test_1_fn"
+    menu.entries["ln"] = "test_1_ln"
+    name = menu.generate_name_instance()
+
+    with patch.object(menu, "generate_table_names", autospec=True) as mock_generate_table_names:  # noqa
+        with patch.object(menu, "name_already_in_db", return_value=False):
+            with patch.object(menu, "add_name_to_db", autospec=True) as mock_add_name:  # noqa
+                menu.commit_name_to_db(mock_conn, created_by, name, person_id, language)  # noqa
+                mock_generate_table_names.assert_called_once()
+                mock_add_name.assert_called_once_with(mock_conn, created_by, name, person_id)  # noqa
+                for key, value in menu.entries.items():
+                    assert value is None
+
+
+# ######## commit #############################################################
+
+def test_names_commit_type_fn_is_None():
+    created_by = "test_func"
+    language = "de"
+
+    menu = MenuName()
+    menu.entries["fn"] = None
+    menu.entries["ln"] = "test_1_ln"
+    name = menu.generate_name_instance()
+
+    with patch.object(menu, "generate_name_instance", return_value=name):
+        assert menu.commit(mock_conn, created_by, language) is None
+
+
+def test_names_commit_type_ln_is_None():
+    created_by = "test_func"
+    language = "de"
+
+    menu = MenuName()
+    menu.entries["fn"] = "test_fn"
+    menu.entries["ln"] = None
+    name = menu.generate_name_instance()
+
+    with patch.object(menu, "generate_name_instance", return_value=name):
+        assert menu.commit(mock_conn, created_by, language) is None
+
+
+@patch("builtins.input", return_value="8")
+def test_names_commit_input_is_8(mock_conn):
+    created_by = "test_func"
+    company_name = "test_company"
+    language = "de"
+
+    menu = MenuName()
+    menu.entries["fn"] = "test_fn"
+    menu.entries["ln"] = "test_ln"
+    expected_name = menu.generate_name_instance()
+
+    with patch.object(menu, "commit", return_value=expected_name):
+        actual_name = menu.run(mock_conn, created_by, company_name, language)
+        assert actual_name == expected_name
