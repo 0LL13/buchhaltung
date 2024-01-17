@@ -281,7 +281,6 @@ def test_names_add_name_to_db(mock_db_connection):
     person_id = "11"
     created_by = "test_func"
     timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
-    # today = str(datetime.date.today())
 
     menu = MenuName()
     menu.entries["fn"] = "test_fn"

@@ -259,7 +259,6 @@ def show_table(conn: sqlite3.Connection, table: str) -> None:
         res_table = res.fetchall()
         for row in res_table:
             print(row)
-        continue_()
 
 
 def show_my_table(conn: sqlite3.Connection, table: str, person_id: int) -> None:  # noqa

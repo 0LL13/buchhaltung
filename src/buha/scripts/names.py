@@ -8,7 +8,6 @@ import datetime
 import re
 import sqlite3
 from operator import itemgetter
-from typing import Tuple
 from .constants import choose_option
 from .constants import firstname_prompt
 from .constants import lastname_prompt
@@ -59,7 +58,7 @@ class MenuName(Menu):
         super().display_menu(company_name, language, task=task)
 
     def run(self, conn: sqlite3.Connection, created_by: str, company_name: str,
-            language: str) -> Tuple[str | None, str | None]:
+            language: str) -> Name | None:
 
         """Display Menu, gather entries in dict "entries", and finally put
         the data in new instance of Name."""
@@ -80,7 +79,7 @@ class MenuName(Menu):
                     action(language)
 
         super().go_back()
-        return None, None
+        return None
 
     def commit(self, conn: sqlite3.Connection, created_by: str,
                language: str) -> Name | None:

@@ -7,6 +7,7 @@ import datetime
 import sqlite3
 from dataclasses import dataclass
 from .constants import choose_option
+from .helpers import continue_
 from .helpers import Menu
 from .helpers import mk_initials
 from .helpers import show_table
@@ -35,7 +36,7 @@ class MenuNewPerson(Menu):
             "1": self.enter_name,
             "2": self.enter_titles,
             "3": self.enter_particulars,
-            "4": show_table,
+            "4": self.show_tables,
             "9": False,
         }
 
@@ -49,17 +50,17 @@ class MenuNewPerson(Menu):
         while True:
             self.display_menu(company_name, language, task="person")
             choice = choose_option(language)
-            if not self.choices.get(choice):
+            if choice == "1":
+                name = self.enter_name(conn, created_by, company_name, language)  # noqa
+            elif choice == "2":
+                return self.enter_titles()
+            elif choice == "3":
+                self.enter_particulars()
+            elif choice == "4":
+                self.show_tables(conn, "persons")
+            else:
                 name = None
                 break
-            else:
-                action = self.choices.get(choice)
-                if action and choice == "4":
-                    action(conn, "persons")
-                elif action:
-                    name = action(conn, created_by, company_name, language)
-                else:
-                    print(f"    {choice} ist keine zulässige Eingabe.")
 
         super().go_back()
         return name
@@ -70,7 +71,7 @@ class MenuNewPerson(Menu):
         # "company_name" is needed to display the company's name in MenuName
         menu = MenuName()
         name = menu.run(conn, created_by, company_name, language)  # format dataclass "Name"  # noqa
-        if name in [None, (None, None)]:
+        if name is None:
             super().go_back()
             return None
         else:
@@ -81,11 +82,11 @@ class MenuNewPerson(Menu):
             add_settings(conn, created_by, language, person_id, initials)
             super().change_menu("person")
 
-    def enter_titles(self) -> None:
-        pass
+    def enter_titles(self) -> None:  # pragma: no cover
+        return None  # pragma: no cover
 
     def enter_particulars(self) -> None:
-        pass
+        print("enter_particulars - to do")  # pragma: no cover
 
     def generate_table_persons(self, conn: sqlite3.Connection) -> None:
         table_persons = """CREATE TABLE IF NOT EXISTS persons (
@@ -137,3 +138,7 @@ class MenuNewPerson(Menu):
                 print("res in get_person_id: ", res)
                 print("res[0]: ", res[0])
             return res[0]
+
+    def show_tables(self, conn: sqlite3.Connection, table: str) -> None:
+        show_table(conn, table)
+        continue_()

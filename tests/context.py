@@ -17,6 +17,7 @@ from buha.scripts import (  # type: ignore # isort:skip # noqa # pylint: disable
     start,
     names,
     shared,
+    person,
 )  # pylint: disable=unused-import  # noqa
 
 from buha.scripts.helpers import (  # type: ignore # isort:skip # noqa # pylint: disable=unused-import, wrong-import-position
