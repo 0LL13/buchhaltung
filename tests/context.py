@@ -14,10 +14,11 @@ sys.path.append(
 from buha.scripts import (  # type: ignore # isort:skip # noqa # pylint: disable=unused-import, wrong-import-position
     constants,
     helpers,
-    start,
     names,
-    shared,
     person,
+    settings,
+    shared,
+    start,
 )  # pylint: disable=unused-import  # noqa
 
 from buha.scripts.helpers import (  # type: ignore # isort:skip # noqa # pylint: disable=unused-import, wrong-import-position
@@ -69,6 +70,13 @@ from buha.scripts.start import (  # type: ignore # isort:skip # noqa # pylint: d
 
 from buha.scripts.names import (  # type: ignore # isort:skip # noqa # pylint: disable=unused-import, wrong-import-position
     MenuName,
+)  # pylint: disable=unused-import  # noqa
+
+
+from buha.scripts.settings import (  # type: ignore # isort:skip # noqa # pylint: disable=unused-import, wrong-import-position
+    MenuSettings,
+    add_settings,
+    generate_table_settings,
 )  # pylint: disable=unused-import  # noqa
 
 

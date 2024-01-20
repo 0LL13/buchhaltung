@@ -116,7 +116,7 @@ class MenuSettings(Menu):
         self.choices = {
             "1": self.change_language,
             "2": self.change_password,
-            "3": show_my_table,
+            "3": self.show_settings,
             "9": False
         }
 
@@ -131,9 +131,7 @@ class MenuSettings(Menu):
             self.display_menu(company_name, language, task="settings")
             choice = choose_option(language)
 
-            if not self.choices.get(choice):
-                break
-            elif choice == "1":
+            if choice == "1":
                 self.change_language(conn, initials)
 
             elif choice == "2":
@@ -141,9 +139,9 @@ class MenuSettings(Menu):
                 update_password(conn, password, initials)
             elif choice == "3":
                 person_id = get_person_id(conn, initials)
-                show_my_table(conn, "settings", person_id)
+                self.show_settings(conn, "settings", person_id)
             else:
-                print(f"    {choice} is not a valid choice.")
+                break
 
         super().go_back()
         return None
@@ -168,3 +166,6 @@ class MenuSettings(Menu):
             else:
                 print("    Password not correct. Too many tries.")
                 return None
+
+    def show_settings(self, conn: sqlite3.Connection, person_id: int) -> None:
+        show_my_table(conn, "settings", person_id)

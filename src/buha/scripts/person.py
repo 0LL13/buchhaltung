@@ -82,11 +82,11 @@ class MenuNewPerson(Menu):
             add_settings(conn, created_by, language, person_id, initials)
             super().change_menu("person")
 
-    def enter_titles(self) -> None:  # pragma: no cover
-        return None  # pragma: no cover
+    def enter_titles(self) -> None:
+        return None
 
     def enter_particulars(self) -> None:
-        print("enter_particulars - to do")  # pragma: no cover
+        return None
 
     def generate_table_persons(self, conn: sqlite3.Connection) -> None:
         table_persons = """CREATE TABLE IF NOT EXISTS persons (

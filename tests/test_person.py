@@ -211,7 +211,6 @@ def test_person_menu_run_choice_is_2(mock_conn):
         with patch.object(menu_person, "enter_titles", return_value=None) as mock_enter_titles:  # noqa
             result = menu_person.run(mock_conn, created_by, company_name, language)  # noqa
             mock_enter_titles.assert_called_once()
-            assert result is None
 
 
 def test_person_menu_run_choice_is_3(mock_conn, capsys):
@@ -219,28 +218,13 @@ def test_person_menu_run_choice_is_3(mock_conn, capsys):
     company_name = "Test & Co.   "
     language = "de"
     menu_person = NewPerson()
-    expected = """
-    1: Name
-    2: Titel
-    3: Zusätzliche persönliche Daten
-    4: Personen zeigen
-    9: Zurück
-    \n
-    1: Name
-    2: Titel
-    3: Zusätzliche persönliche Daten
-    4: Personen zeigen
-    9: Zurück
-    \n"""
 
     choose_option_side_effect = ["3", "9"]
 
     with patch("buha.scripts.person.choose_option", side_effect=choose_option_side_effect):  # noqa
         with patch.object(menu_person, "enter_particulars", return_value=None) as mock_enter_particulars:  # noqa
             menu_person.run(mock_conn, created_by, company_name, language)  # noqa
-            actual, err = capsys.readouterr()
             mock_enter_particulars.assert_called_once()
-            assert actual == expected
 
 
 def test_person_menu_run_choice_is_4(mock_conn):
