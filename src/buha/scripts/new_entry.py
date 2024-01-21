@@ -55,24 +55,24 @@ class MenuNewEntry(Menu):
 
     def new_entity(self, conn: sqlite3.Connection, created_by: str,
                    company_name: str, language: str) -> None:
-        print("ToDo")
+        print("ToDo")  # pragma: no cover
 
     def new_object(self, conn: sqlite3.Connection, created_by: str,
                    company_name: str, language: str) -> None:
-        print("ToDo")
+        print("ToDo")  # pragma: no cover
 
     def new_project(self, conn: sqlite3.Connection, created_by: str,
                     company_name: str, language: str) -> None:
-        print("ToDo")
+        print("ToDo")  # pragma: no cover
 
     def new_service(self, conn: sqlite3.Connection, created_by: str,
                     company_name: str, language: str) -> None:
-        print("ToDo")
+        print("ToDo")  # pragma: no cover
 
     def new_account(self, conn: sqlite3.Connection, created_by: str,
                     company_name: str, language: str) -> None:
-        print("ToDo")
+        print("ToDo")  # pragma: no cover
 
     def settings(self, conn: sqlite3.Connection, created_by: str,
                  company_name: str, language: str) -> None:
-        print("ToDo")
+        print("ToDo")  # pragma: no cover

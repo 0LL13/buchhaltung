@@ -3,6 +3,5 @@ branch = True
 
 [report]
 
-exclude_lines =
+exclude_also =
     if __name__ == .__main__.:
-    pass

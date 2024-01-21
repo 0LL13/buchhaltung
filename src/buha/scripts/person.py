@@ -83,10 +83,10 @@ class MenuNewPerson(Menu):
             super().change_menu("person")
 
     def enter_titles(self) -> None:
-        return None
+        print("ToDo")  # pragma: no cover
 
     def enter_particulars(self) -> None:
-        return None
+        print("ToDo")  # pragma: no cover
 
     def generate_table_persons(self, conn: sqlite3.Connection) -> None:
         table_persons = """CREATE TABLE IF NOT EXISTS persons (

@@ -331,6 +331,25 @@ def test_settings_update_language(mock_conn):
         assert columns == expected_row
 
 
+# ######## update password ####################################################
+
+def test_settings_update_password(mock_conn):
+    initials = "tt"
+    password = "password"
+
+    settings.generate_table_settings(mock_conn)
+    cur = mock_conn.cursor()
+    cur.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='settings'")  # noqa
+
+    with patch.object(settings, "get_person_id", return_value=1) as mock_get_person_id:  # noqa
+        with patch.object(settings, "generate_table_settings", return_value=None) as mock_generate_table_settings:  # noqa
+            with patch.object(settings, "hash_password", return_value=(b"mocked_salt", b"mocked_hash")) as mock_hash_password:  # noqa
+                settings.update_password(mock_conn, password, initials)
+                mock_get_person_id.assert_called_once()
+                mock_generate_table_settings.assert_called_once()
+                mock_hash_password.assert_called_once()
+
+
 # ######## change password ####################################################
 
 def test_settings_change_password(mock_conn, capsys):
@@ -353,6 +372,14 @@ def test_settings_change_password(mock_conn, capsys):
                 assert "Password not correct. Try again (2 of 3): " in captured.out  # noqa
                 assert "Password not correct. Try again (3 of 3): " in captured.out  # noqa
                 assert "Password not correct. Too many tries." in captured.out
+
+    password_entry_return_value = "new_password"
+
+    with patch("buha.scripts.settings.choose_option", side_effect=choose_option_side_effect):  # noqa
+        with patch.object(settings, "password_correct", return_value=True):
+            with patch("builtins.input", return_value=password_entry_return_value):  # noqa
+                result = menu_settings.change_password(mock_conn, initials, language, counter)  # noqa
+                assert result == password_entry_return_value
 
 
 # ######## show my table ######################################################
