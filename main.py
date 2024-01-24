@@ -101,12 +101,12 @@ def main():
     if 0:
         print("initials: ", initials)
         continue_()
-    if authenticated:
-        menu = MenuStart()
-        menu.run(conn, initials, company_name, language)
-    else:
+    if (authenticated, initials) == (False, None):
         conn.close()
         sys.exit()
+    else:
+        menu = MenuStart()
+        menu.run(conn, initials, company_name, language)
 
 
 if __name__ == "__main__":

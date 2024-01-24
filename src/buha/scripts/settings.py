@@ -133,7 +133,6 @@ class MenuSettings(Menu):
 
             if choice == "1":
                 self.change_language(conn, initials)
-
             elif choice == "2":
                 password = self.change_password(conn, initials, language)
                 update_password(conn, password, initials)

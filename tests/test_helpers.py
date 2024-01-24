@@ -196,8 +196,8 @@ def test_basic_menu_class_display_menu_wo_headline(mocker, capsys):
     menu = Menu()
 
     expected_task_menu = """
-    1. Einloggen
-    2. Beenden
+    1: Einloggen
+    9: Beenden
     \n"""
 
     with patch.object(helpers.Menu, "menu_changed", return_value=False):
@@ -220,8 +220,8 @@ def test_basic_menu_class_display_menu_with_headline(mocker, capsys):
     {headline_final}
     +{'-' * 77}+
 
-    1. Einloggen
-    2. Beenden
+    1: Einloggen
+    9: Beenden
     \n"""
 
     with patch.object(helpers.Menu, "menu_changed", return_value=True):

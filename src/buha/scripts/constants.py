@@ -70,8 +70,8 @@ password_prompt = {
 
 login_menu = dict()
 login_menu["de"] = """
-    1. Einloggen
-    2. Beenden
+    1: Einloggen
+    9: Beenden
     """
 
 

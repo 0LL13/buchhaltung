@@ -5,7 +5,6 @@ import getpass
 import hashlib
 import os
 import sqlite3
-import sys
 
 from typing import Tuple
 
@@ -29,40 +28,37 @@ class LoginMenu(Menu):
         super().display_menu(company_name, language, task=task)
 
     def run(self, conn: sqlite3.Connection, language: str,
-            company_name: str) -> Tuple[bool, str]:
+            company_name: str) -> Tuple[bool, str] | None:
 
         while True:
             self.display_menu(company_name, language, task="login")
             choice = choose_option(language)
             if choice == "1":
-                authenticated, initials = login_employee(conn, language, company_name)  # noqa
+                authenticated, initials = self.login_employee(conn, language, company_name)  # noqa
                 break
             else:
-                authenticated = False
-                initials = None
-                conn.close()
-                sys.exit()
+                authenticated, initials = False, None
+                break
 
         super().go_back()
         return authenticated, initials
 
+    def login_employee(self, conn: sqlite3.Connection, language: str,
+                       company_name: str) -> Tuple[bool, str | None]:
+        """Returns authenticated, initials."""
+        global debug
+        debug = False
 
-def login_employee(conn: sqlite3.Connection, language: str,
-                   company_name: str) -> Tuple[bool, str]:
-    """Returns authenticated, initials."""
-    global debug
-    debug = False
-
-    initials = enter_initials(language)
-    if initials_in_table(conn, initials):
-        if is_internal(conn, initials):
-            if debug:
-                password = input(password_prompt[language])
-            else:
-                password = getpass.getpass(password_prompt[language])
-            if password_correct(conn, initials, password):
-                return True, initials
-    return False, None
+        initials = enter_initials(language)
+        if initials_in_table(conn, initials):
+            if is_internal(conn, initials):
+                if debug:
+                    password = input(password_prompt[language])
+                else:
+                    password = getpass.getpass(password_prompt[language])
+                if password_correct(conn, initials, password):
+                    return True, initials
+        return False, None
 
 
 def is_internal(conn: sqlite3.Connection, initials: str) -> bool:
@@ -90,7 +86,7 @@ def initials_in_table(conn: sqlite3.Connection, initials: str) -> bool:
         res_initials = res.fetchall()
         for res in res_initials:
             abbr = ''.join(str(c) for c in res)
-            if 1:
+            if 0:
                 print("res_initials: ", res_initials)
                 print("abbr: ", abbr)
                 print("initials: ", initials)
@@ -101,6 +97,8 @@ def initials_in_table(conn: sqlite3.Connection, initials: str) -> bool:
 
 def password_correct(conn: sqlite3.Connection, initials: str, password: str) -> bool:  # noqa
 
+    print("inside password_correct")
+
     with conn:
         cur = conn.cursor()
 
@@ -110,6 +108,7 @@ def password_correct(conn: sqlite3.Connection, initials: str, password: str) -> 
         salt_tuple = cur.fetchone()
         if salt_tuple:
             salt = salt_tuple[0]
+            print("salt_tuple passed, now hashed_pw ...")
         else:
             return False
 

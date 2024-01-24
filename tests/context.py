@@ -14,6 +14,7 @@ sys.path.append(
 from buha.scripts import (  # type: ignore # isort:skip # noqa # pylint: disable=unused-import, wrong-import-position
     constants,
     helpers,
+    login,
     names,
     person,
     settings,
