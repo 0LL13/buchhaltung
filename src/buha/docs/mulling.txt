@@ -1,0 +1,13 @@
+- first create db with name of company
+- create first employee (or owner)
+- login
+
+- second add new employees or
+- import employees, customers, suppliers, ... from .csv file
+- import from different files, one with employees, one with customers, ...
+- handle double entries, missing entries, ...
+
+- create accounts and connect entities with accounts, accounts according to
+accounting system (Kontenrahmen)
+
+- write bills

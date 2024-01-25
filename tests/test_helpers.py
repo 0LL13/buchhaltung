@@ -9,7 +9,6 @@ import sqlite3
 
 from pathlib import Path
 from pyfakefs.fake_filesystem_unittest import Patcher
-# from unittest import mock
 from unittest.mock import Mock
 from unittest.mock import patch
 from unittest.mock import create_autospec

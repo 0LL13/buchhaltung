@@ -39,19 +39,20 @@ class MenuNewEntry(Menu):
 
             if not self.choices.get(choice):
                 break
-            elif choice in self.choices:
-                action = self.choices.get(choice)
-                if action:
-                    action(conn, created_by, company_name, language)
             else:
-                print(f"    {choice} is not a valid choice.")
+                action = self.choices.get(choice)
+                super().change_menu("new entry")
+                action(conn, created_by, company_name, language)
+
         super().go_back()
 
     def new_person(self, conn: sqlite3.Connection, created_by: str,
                    company_name: str, language: str) -> None:
 
+        print("I was here.")
+
         menu = MenuNewPerson()
-        menu.run(conn, created_by, company_name, language)
+        menu.enter_name(conn, created_by, company_name, language)
 
     def new_entity(self, conn: sqlite3.Connection, created_by: str,
                    company_name: str, language: str) -> None:
