@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 # helpers.py
 """Shared class definitions to avoid circular import issues."""
-import datetime
 import os
 import platform
 
@@ -27,10 +26,6 @@ def is_posix() -> bool:
 
 def clear_screen() -> None:
     os.system("clear" if is_posix() else "cls")
-
-
-def get_today() -> str:
-    return datetime.date.today()
 
 
 # ######## class AttrDisplay ##################################################
@@ -73,7 +68,7 @@ class AttrDisplay:
         see also: https://zetcode.com/python/prettytable/
         """
         if language:
-            attrs = self.translate()
+            attrs = self.translate(language)
         else:
             attrs = self.gather_attrs()
         # print(f"{self.__class__.__name__}")
@@ -85,12 +80,20 @@ class AttrDisplay:
 
         return str(t)
 
-    def translate(self) -> dict:
+    def translate(self, language) -> dict:
         """
         Select dict with attribute names of another language.
         """
         attrs = self.gather_attrs()
+
+        if language == "de":
+            return self.translate_to_german(attrs)
+        else:
+            return attrs
+
+    def translate_to_german(self, attrs) -> dict:
         new_attrs = {}
+
         for k, v in attrs.items():
             if k in german_attrs:
                 german_key = german_attrs[k]

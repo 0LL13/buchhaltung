@@ -47,12 +47,10 @@ class MenuStart(Menu):
 
             if not self.choices.get(choice):
                 break
-            elif choice in self.choices:
-                action = self.choices.get(choice)
-                if action:
-                    action(conn, created_by, company_name, language)
             else:
-                print(f"    {choice} is not a valid choice.")
+                action = self.choices.get(choice)
+                action(conn, created_by, company_name, language)
+
         super().go_back()
 
     def new_entry(self, conn: sqlite3.Connection, created_by: str,

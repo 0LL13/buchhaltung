@@ -88,9 +88,10 @@ from buha.scripts.login import (  # type: ignore # isort:skip # noqa # pylint: d
 
 
 from buha.scripts.shared import (  # type: ignore # isort:skip # noqa # pylint: disable=unused-import, wrong-import-position
+    AttrDisplay,
     clear_screen,
+    is_posix,
     Name,
-    get_today,
 )  # pylint: disable=unused-import  # noqa
 
 

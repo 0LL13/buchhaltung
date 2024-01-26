@@ -213,7 +213,7 @@ def test_person_menu_run_choice_is_2(mock_conn):
             mock_enter_titles.assert_called_once()
 
 
-def test_person_menu_run_choice_is_3(mock_conn, capsys):
+def test_person_menu_run_choice_is_3(mock_conn):
     created_by = "test_func"
     company_name = "Test & Co.   "
     language = "de"
