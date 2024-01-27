@@ -97,8 +97,6 @@ def initials_in_table(conn: sqlite3.Connection, initials: str) -> bool:
 
 def password_correct(conn: sqlite3.Connection, initials: str, password: str) -> bool:  # noqa
 
-    print("inside password_correct")
-
     with conn:
         cur = conn.cursor()
 
@@ -108,7 +106,6 @@ def password_correct(conn: sqlite3.Connection, initials: str, password: str) -> 
         salt_tuple = cur.fetchone()
         if salt_tuple:
             salt = salt_tuple[0]
-            print("salt_tuple passed, now hashed_pw ...")
         else:
             return False
 

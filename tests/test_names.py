@@ -32,7 +32,7 @@ def no_clear_screen():
 def display_with_change():
     company_name = "Test & Co.   "
     company_line = f"| {company_name}{' ' * 63}|"
-    headline = "NAMENSEINTRÄGE"
+    headline = "NAMENSEINTRÄGE"  # 14
     headline_final = f"| {headline}{' ' * 62}|"
     expected = f"""
     +{'-' * 77}+
@@ -97,31 +97,31 @@ def test_start_menu_reset(reset_parent_class_menu):
 # ######## MenuName class #####################################################
 
 def test_name_menu_reset_entries():
-    menu = MenuName()
-    menu.reset_entries()
-    for key, value in menu.entries.items():
+    menu_name = MenuName()
+    menu_name.reset_entries()
+    for key, value in menu_name.entries.items():
         assert value is None
 
 
 def test_name_menu_class_init(reset_parent_class_menu):
     reset_parent_class_menu()
-    menu = MenuName()
-    if menu.last_caller_module == "names":
+    menu_name = MenuName()
+    if menu_name.last_caller_module == "names":
         assert False
-    assert menu.current_caller_module == "src.buha.scripts.names"
-    assert menu.navigation_stack == ["names"]
+    assert menu_name.current_caller_module == "src.buha.scripts.names"
+    assert menu_name.navigation_stack == ["names"]
 
 
 def test_name_menu_display_menu(mocker, capsys, display_with_change):
     mocker.patch("os.system")
-    menu = MenuName()
+    menu_name = MenuName()
     company_name = "Test & Co.   "
     language = "de"
     task = "names"
     expected = display_with_change
 
     with patch.object(helpers.Menu, "menu_changed", return_value=True):
-        menu.display_menu(company_name, language, task)
+        menu_name.display_menu(company_name, language, task)
         actual, err = capsys.readouterr()
         assert actual == expected
 

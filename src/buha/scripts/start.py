@@ -59,10 +59,10 @@ class MenuStart(Menu):
         menu.run(conn, created_by, company_name, language)
 
     def change_entry(self, conn, initials) -> None:
-        print("ToDo")
+        print("ToDo")  # pragma: no cover
 
     def search_entry(self, conn, initials) -> None:
-        print("ToDo")
+        print("ToDo")  # pragma: no cover
 
     def settings(self, conn: sqlite3.Connection, initials: str,
                  company_name: str, language: str) -> None:
@@ -73,5 +73,6 @@ class MenuStart(Menu):
                company_name: str, language: str) -> None:
         Menu.navigation_stack = []
         initials = None
+        super().go_back()
         login_menu = LoginMenu()
         authenticated, initials = login_menu.run(conn, language, company_name)
